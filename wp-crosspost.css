@@ -1,0 +1,16 @@
+@-webkit-keyframes highlight-target {
+    from { background:#FFF; }
+    50% { background:#FFFFD3; }
+    to { background:#FFF; }
+}
+@keyframes highlight-target {
+    from { background:#FFF; }
+    50% { background:#FFFFD3; }
+    to { background:#FFF; }
+}
+#wp-crosspost-meta-box:target {
+    -webkit-animation: highlight-target 1s linear;
+    animation: highlight-target 1s linear;
+    -webkit-animation-iteration-count: 3;
+    animation-iteration-count: 3;
+}
