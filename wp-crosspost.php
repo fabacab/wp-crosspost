@@ -314,10 +314,14 @@ END_HTML;
                 $categories[] = str_replace('&amp;', '&', $category->name);
             }
         }
+
         $common_params = array(
             'date' => get_post_time('c', true, $post_id),
             'title' => get_the_title($post_id),
             'status' => get_post_status($post_id),
+            'password' => get_post_field('post_password', $post_id),
+            // TODO: Figure out how to find approriate remote parent id.
+            //'parent' => get_post_field('post_parent', $post_id),
             'type' => get_post_type($post_id),
             'format' => get_post_format($post_id),
             'tags' => implode(',', $tags),
@@ -326,7 +330,6 @@ END_HTML;
             'comments_open' => comments_open($post_id),
             'pings_open' => pings_open($post_id)
             // TODO: 'publicize' => 
-            // TODO: 'password' => 
             // TODO: 'media' => 
             // TODO: 'metadata' => 
         );
