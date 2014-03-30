@@ -3,7 +3,7 @@
  * Plugin Name: WordPress Crosspost
  * Plugin URI: https://github.com/meitar/wp-crosspost/#readme
  * Description: Automatically crossposts to your WordPress.com site when you publish a post on your (self-hosted) WordPress blog.
- * Version: 0.2
+ * Version: 0.2.1
  * Author: Meitar Moscovitz
  * Author URI: http://maymay.net/
  * Text Domain: wp-crosspost

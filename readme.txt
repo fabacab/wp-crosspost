@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meita
 Tags: WordPress.com, post, crosspost, publishing
 Requires at least: 3.1
 Tested up to: 3.8.1
-Stable tag: 0.2
+Stable tag: 0.2.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -12,7 +12,11 @@ WordPress Crosspost cross-posts content from your self-hosted WordPress blogs to
 
 == Description ==
 
-WordPress Crosspost crossposts to the WordPress.com (or [JetPack](http://jetpack.me/)-enabled) blog of your choice whenever you hit the "Publish" (or "Save Draft") button. It uses WordPress.com's simple API to keep posts in sync; when you edit your WordPress post, it updates your crossposted post. Private WordPress posts stay private on the remote site, deleting a post from WordPress that you've previously cross-posted deletes it from the remote site, too, and so on. Scheduling a WordPress post to be published any time in the future will add it to the remote site's future publication schedule, too.
+WordPress Crosspost posts to your WordPress.com (or [JetPack](http://jetpack.me/)-enabled) blog of your choice whenever you hit the "Publish" (or "Save Draft") button. It can import your reblogs and other posts on WordPress.com. It even downloads the media attachments in your WordPress.com posts and saves them in your self-hosted WordPress Media Library.
+
+**Transform your self-hosted WordPress website into a back-end for your WordPress.com-hosted website. Create original posts on your local computer, but publish them to WordPress.com. Import your WordPress.com reblogs. [Always have a portable copy (a running copy) of your entire WordPress.com blog](http://maymay.net/blog/2014/02/17/keep-a-running-backup-of-your-tumblr-reblogs-with-tumblr-crosspostr/).**
+
+This plugin uses [WordPress.com's REST API](http://developer.wordpress.com/docs/api/) to keep posts in sync; when you edit your WordPress post, it updates your crossposted post. Private WordPress posts stay private on the remote site, deleting a post from WordPress that you've previously cross-posted deletes it from the remote site, too, and so on. Scheduling a WordPress post to be published any time in the future will add it to the remote site's future publication schedule, too.
 
 WP-Crosspost is very lightweight. It just requires you to connect to your WordPress.com account from the plugin options screen. After that, you're ready to cross-post!
 
@@ -92,6 +96,10 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 5. Get help where you need it from WordPress's built-in "Help" system.
 
 == Changelog ==
+
+= Version 0.2.1 =
+
+* Feature: Crosspost password protected posts with their password, too.
 
 = Version 0.2 =
 
