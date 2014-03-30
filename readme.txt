@@ -4,11 +4,11 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meita
 Tags: WordPress.com, post, crosspost, publishing
 Requires at least: 3.1
 Tested up to: 3.8.1
-Stable tag: 0.1
+Stable tag: 0.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-WordPress Crosspost cross-posts content from your self-hosted WordPress blogs to your WordPress.com sites. Changes to your WordPress posts are reflected in your WordPress.com sites.
+WordPress Crosspost cross-posts content from your self-hosted WordPress blogs to your WordPress.com sites. Updates are crossposted, too.
 
 == Description ==
 
@@ -18,7 +18,7 @@ WP-Crosspost is very lightweight. It just requires you to connect to your WordPr
 
 Other options and features enable tweaking additional metadata from your WordPress entry (notably categories and tags) to the remote site, switching comments and pingbacks on or off, and more.
 
-WP-Crosspost transforms your self-hosted WordPress website into a back-end for your WordPress.com-hosted website. Create your posts locally WordPress, but publish to WordPress.com's servers. This means you'll always have a portable copy of your entire blog, and you can stop worrying about whether your backups are up to date. Create new content locally, then move it to the server automatically, instead of the other way around!
+WP-Crosspost transforms your self-hosted WordPress website into a back-end for your WordPress.com-hosted website. Create your posts locally on your own computer's WordPress, but publish to WordPress.com's servers. This means you'll always have a portable copy of your entire blog, and you can stop worrying about whether your backups are up to date. Create new content locally, then move them to the server automatically, instead of the other way around!
 
 > Servers no longer serve, they possess. We should call them possessors.
 
@@ -92,6 +92,18 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 5. Get help where you need it from WordPress's built-in "Help" system.
 
 == Changelog ==
+
+= Version 0.2 =
+
+* Feature: "Sync posts from WordPress.com" will import posts you create on your WordPress.com blog(s) into your self-hosted WordPress blog, along with their metadata, tags, post formats, geolocation data, and attachments. This is useful for creating an automatic backup of the conversations you have in reblog threads on WordPress.com.
+    * When first activated, your entire WordPress.com blog archive will be copied (including private posts and custom post types).
+    * Once every 24 hours, WordPress Crosspost will fetch up to the most recent 200 posts on your WordPress.com blog to see if you have reblogged anything on the service. If you have, WordPress Crosspost will import those posts to your self-hosted WordPress blog.
+    * Posts you created on WordPress.com using WordPress Crosspost will not be duplicated.
+    * Once imported to your self-hosted WordPress blog, edits you make on WordPress.com are not retrieved, but edits you make on your self-hosted WordPress blog are sent back to WordPress.com, so prefer using your self-hosted WordPress blog to edit and update your imported posts.
+    * **This feature is experimental.** Please make sure you have a backup of your WordPress website before you enable sync'ing from WordPress.com
+* Security: Improved protection for OAuth access tokens.
+* Bugfix: Ensure sanitization routines do not corrupt OAuth access tokens.
+* Minor code cleanup.
 
 = Verson 0.1 =
 

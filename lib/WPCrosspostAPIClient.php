@@ -26,6 +26,21 @@ class WP_Crosspost_API_Client extends WordPressDotCom_OAuthWP_Plugin {
         return $this->talkToService('/sites/' . $data->token_site_id, array(), 'GET');
     }
 
+    public function getPosts ($blog, $params = array()) {
+        $url = "/sites/$blog/posts/";
+        if (!empty($params)) {
+            $url .= '?';
+            foreach ($params as $k => $v) {
+                $url .= "$k=$v&";
+            }
+            // Strip trailing '&' if it's there.
+            if ('&' === substr($url, -1)) {
+                $url = substr($url, 0, strlen($url) - 1);
+            }
+        }
+        return $this->talkToService($url, array(), 'GET');
+    }
+
     public function postToService ($blog, $params) {
         $api_method = "/sites/$blog/posts/new";
         return $this->talkToService($api_method, $params);

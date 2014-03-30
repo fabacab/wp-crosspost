@@ -11,6 +11,7 @@ if (!defined('WP_UNINSTALL_PLUGIN')) { exit(); }
 // Delete options.
 delete_option('wp_crosspost_settings');
 delete_option('_wp_crosspost_admin_notices');
+delete_option('wp_crosspost_access_token');
 
 delete_post_meta_by_key('wp_crosspost_crosspost');
 delete_post_meta_by_key('wp_crosspost_use_excerpt');

@@ -3,7 +3,7 @@
  * Plugin Name: WordPress Crosspost
  * Plugin URI: https://github.com/meitar/wp-crosspost/#readme
  * Description: Automatically crossposts to your WordPress.com site when you publish a post on your (self-hosted) WordPress blog.
- * Version: 0.1
+ * Version: 0.2
  * Author: Meitar Moscovitz
  * Author URI: http://maymay.net/
  * Text Domain: wp-crosspost
@@ -16,12 +16,15 @@ class WP_Crosspost {
 
     public function __construct () {
         add_action('plugins_loaded', array($this, 'registerL10n'));
+        add_action('init', array($this, 'setSyncSchedules'));
         add_action('admin_init', array($this, 'registerSettings'));
         add_action('admin_menu', array($this, 'registerAdminMenu'));
         add_action('admin_enqueue_scripts', array($this, 'registerAdminScripts'));
         add_action('admin_head', array($this, 'doAdminHeadActions'));
         add_action('add_meta_boxes', array($this, 'addMetaBox'));
         add_action('save_post', array($this, 'savePost'));
+
+        add_action($this->prefix . '_sync_content', array($this, 'syncFromWordPressBlog'));
 
         // Both 'trash_post' and 'before_delete_post' to mimic moving to trash.
         add_action('trash_post', array($this, 'removeFromService'));
@@ -32,8 +35,8 @@ class WP_Crosspost {
         require_once 'lib/WPCrosspostAPIClient.php';
         if (isset($options['consumer_key']) && isset($options['consumer_secret'])) {
             $this->wpcom = new WP_Crosspost_API_Client($options['consumer_key'], $options['consumer_secret']);
-            if (isset($options['access_token']) && isset($options['access_token_secret'])) {
-                $this->wpcom->access_token = $options['access_token'];
+            if (get_option($this->prefix . '_access_token')) {
+                $this->wpcom->client->access_token = get_option($this->prefix . '_access_token');
             }
         } else {
             $this->wpcom = new WP_Crosspost_API_Client;
@@ -63,9 +66,7 @@ class WP_Crosspost {
 
     public function completeAuthorization () {
         $tokens = $this->wpcom->completeAuthorization(admin_url('options-general.php?page=' . $this->prefix . '_settings&' . $this->prefix . '_callback'));
-        $options = get_option($this->prefix . '_settings');
-        $options['access_token'] = $tokens['value'];
-        update_option($this->prefix . '_settings', $options);
+        update_option($this->prefix . '_access_token', $tokens['value']);
     }
 
     public function showMissingConfigNotice () {
@@ -386,7 +387,7 @@ END_HTML;
         if (!isset($_POST[$this->prefix . '_meta_box_nonce']) || !wp_verify_nonce($_POST[$this->prefix . '_meta_box_nonce'], 'editing_' . $this->prefix)) {
             return;
         }
-        if (!$this->isConnectedToWordPressDotCom()) { return; }
+        if (!$this->isConnectedToService()) { return; }
 
         if (isset($_POST[$this->prefix . '_use_excerpt'])) {
             update_post_meta($post_id, $this->prefix . '_use_excerpt', 1);
@@ -539,10 +540,14 @@ END_HTML;
                     }
                     $safe_input[$k] = sanitize_text_field($v);
                 break;
-                case 'access_token':
-                case 'access_token_secret':
                 case 'default_hostname':
                     $safe_input[$k] = sanitize_text_field($v);
+                break;
+                case 'sync_content':
+                    $safe_input[$k] = array();
+                    foreach ($v as $x) {
+                        $safe_input[$k][] = sanitize_text_field($x);
+                    }
                 break;
                 case 'exclude_categories':
                     $safe_v = array();
@@ -575,14 +580,19 @@ END_HTML;
         return $safe_input;
     }
 
-    private function isConnectedToWordPressDotCom () {
+    private function isConnectedToService () {
         $options = get_option($this->prefix . '_settings');
-        return isset($this->wpcom) && isset($options['access_token']);
+        return isset($this->wpcom) && get_option($this->prefix . '_access_token');
+    }
+
+    private function disconnectFromService () {
+        @$this->wpcom->client->ResetAccessToken(); // Suppress session_start() warning.
+        delete_option($this->prefix . '_access_token');
     }
 
     public function renderMetaBox ($post) {
         wp_nonce_field('editing_' . $this->prefix, $this->prefix . '_meta_box_nonce');
-        if (!$this->isConnectedToWordPressDotCom()) {
+        if (!$this->isConnectedToService()) {
             $this->showError(__('WordPress Crosspost does not yet have a connection to WordPress.com. Are you sure you connected WordPress Crosspost to your WordPress.com account?', 'wp-crosspost'));
             return;
         }
@@ -631,9 +641,7 @@ END_HTML;
         }
         $options = get_option($this->prefix . '_settings');
         if (isset($_GET['disconnect']) && wp_verify_nonce($_GET[$this->prefix . '_nonce'], 'disconnect_from_wordpress')) {
-            @$this->wpcom->client->ResetAccessToken(); // Suppress session_start() warning.
-            unset($options['access_token']);
-            if (update_option($this->prefix . '_settings', $options)) {
+            $this->disconnectFromService();
 ?>
 <div class="updated">
     <p>
@@ -642,7 +650,6 @@ END_HTML;
     </p>
 </div>
 <?php
-            }
         }
 ?>
 <h2><?php esc_html_e('WordPress Crosspost Settings', 'wp-crosspost');?></h2>
@@ -651,7 +658,7 @@ END_HTML;
 <fieldset><legend><?php esc_html_e('Connection to WordPress.com', 'wp-crosspost');?></legend>
 <table class="form-table" summary="<?php esc_attr_e('Required settings to connect to WordPress.', 'wp-crosspost');?>">
     <tbody>
-        <tr<?php if (isset($options['access_token'])) : print ' style="display: none;"'; endif;?>>
+        <tr<?php if (get_option($this->prefix . '_access_token')) : print ' style="display: none;"'; endif;?>>
             <th>
                 <label for="<?php esc_attr_e($this->prefix);?>_consumer_key"><?php esc_html_e('WordPress Client ID', 'wp-crosspost');?></label>
             </th>
@@ -668,7 +675,7 @@ END_HTML;
                 </p>
             </td>
         </tr>
-        <tr<?php if (isset($options['access_token'])) : print ' style="display: none;"'; endif;?>>
+        <tr<?php if (get_option($this->prefix . '_access_token')) : print ' style="display: none;"'; endif;?>>
             <th>
                 <label for="<?php esc_attr_e($this->prefix);?>_consumer_secret"><?php esc_html_e('OAuth consumer secret', 'wp-crosspost');?></label>
             </th>
@@ -679,7 +686,7 @@ END_HTML;
                 </p>
             </td>
         </tr>
-        <?php if (!isset($options['access_token']) && isset($options['consumer_key']) && isset($options['consumer_secret'])) { ?>
+        <?php if (!get_option($this->prefix . '_access_token') && isset($options['consumer_key']) && isset($options['consumer_secret'])) { ?>
         <tr>
             <th class="wp-ui-notification" style="border-radius: 5px; padding: 10px;">
                 <label for="<?php esc_attr_e($this->prefix);?>_oauth_authorize"><?php esc_html_e('Connect to WordPress.com:', 'wp-crosspost');?></label>
@@ -688,7 +695,7 @@ END_HTML;
                 <a href="<?php print wp_nonce_url(admin_url('options-general.php?page=' . $this->prefix . '_settings&' . $this->prefix . '_oauth_authorize'), 'wordpress-authorize');?>" class="button button-primary"><?php esc_html_e('Click here to connect to WordPress.com', 'wp-crosspost');?></a>
             </td>
         </tr>
-        <?php } else if (isset($options['access_token'])) { ?>
+        <?php } else if (get_option($this->prefix . '_access_token')) { ?>
         <tr>
             <th colspan="2">
                 <div class="updated">
@@ -698,16 +705,13 @@ END_HTML;
                         <span class="description"><?php esc_html_e('Disconnecting will stop cross-posts from appearing on or being imported from your WordPress.com site(s), and will reset the options below to their defaults. You can re-connect at any time.', 'wp-crosspost');?></span>
                     </p>
                 </div>
-                <?php // TODO: Should the access tokens never be revealed to the client? ?>
-                <input type="hidden" name="<?php esc_attr_e($this->prefix);?>_settings[access_token]" value="<?php print esc_attr($options['access_token']);?>" />
-                <input type="hidden" name="<?php esc_attr_e($this->prefix);?>_settings[access_token_secret]" value="<?php print esc_attr($options['access_token_secret']);?>" />
             </th>
         </tr>
         <?php } ?>
     </tbody>
 </table>
 </fieldset>
-        <?php if (isset($options['access_token'])) { ?>
+        <?php if (get_option($this->prefix . '_access_token')) { ?>
 <fieldset><legend><?php esc_html_e('Crossposting Options', 'wp-crosspost');?></legend>
 <table class="form-table" summary="<?php esc_attr_e('Options for customizing crossposting behavior.', 'wp-crosspost');?>">
     <tbody>
@@ -718,6 +722,18 @@ END_HTML;
             <td>
                 <?php print $this->wordpressBlogsSelectField(array('id' => $this->prefix . '_default_hostname', 'name' => $this->prefix . '_settings[default_hostname]'), $this->getWordPressSiteId(0));?>
                 <p class="description"><?php esc_html_e('Choose which WordPress blog you want to send your posts to by default. This can be overriden on a per-post basis, too.', 'wp-crosspost');?></p>
+            </td>
+        </tr>
+        <tr>
+            <th>
+                <label for="<?php esc_attr_e($this->prefix);?>_sync_content"><?php esc_html_e('Sync posts from WordPress.com', 'wp-crosspost');?></label>
+                <p class="description"><?php esc_html_e('(This feature is experimental. Please backup your website before you turn this on.)', 'wp-crosspost');?></p>
+            </th>
+            <td>
+                <ul id="<?php esc_attr_e($this->prefix);?>_sync_content">
+                    <?php print $this->wordpressBlogsListCheckboxes(array('id' => $this->prefix . '_sync_content', 'name' => $this->prefix . '_settings[sync_content][]'), $options['sync_content']);?>
+                </ul>
+                <p class="description"><?php esc_html_e('Content you create on the WordPress blogs you select will automatically be copied to this blog.', 'wp-crosspost');?></p>
             </td>
         </tr>
         <tr>
@@ -826,6 +842,188 @@ END_HTML;
         $this->showDonationAppeal();
     } // end public function renderOptionsPage
 
+    public function setSyncSchedules () {
+        if (!$this->isConnectedToService()) { return; }
+        $options = get_option($this->prefix . '_settings');
+        $blogs_to_sync = (empty($options['sync_content'])) ? array() : $options['sync_content'];
+        // If we are being asked to sync, set up a daily schedule for that.
+        if (!empty($blogs_to_sync)) {
+            foreach ($blogs_to_sync as $x) {
+                if (!wp_get_schedule($this->prefix . '_sync_content', array($x))) {
+                    wp_schedule_event(time(), 'daily', $this->prefix . '_sync_content', array($x));
+                }
+            }
+        }
+        // For any blogs we know of but aren't being asked to sync,
+        $known_blogs = array();
+        $blog = $this->wpcom->getTokenSiteInfo();
+        $known_blogs[] = parse_url($blog->URL, PHP_URL_HOST);
+        $to_unschedule = array_diff($known_blogs, $blogs_to_sync);
+        foreach ($to_unschedule as $x) {
+            // check to see if there's a scheduled event to sync it, and,
+            // if so, unschedule it.
+            wp_unschedule_event(
+                wp_next_scheduled($this->prefix . '_sync_content', array($x)),
+                $this->prefix . '_sync_content',
+                array($x)
+            );
+        }
+    }
+
+    public function syncFromWordPressBlog ($base_hostname) {
+        $options = get_option($this->prefix . '_settings');
+        if (!isset($options['last_synced_ids'])) {
+            $options['last_synced_ids'] = array();
+        }
+        $latest_synced_id = (isset($options['last_synced_ids'][$base_hostname]))
+            ? $options['last_synced_ids'][$base_hostname]
+            : 0;
+
+        $ids_synced = array(0); // Init with 0
+        $offset = 0;
+        $limit = 100;
+        $num_posts_to_get = 0;
+        // If we never synced, trawl through entire archive.
+        if (0 === $latest_synced_id) {
+            $info = $this->wpcom->getTokenSiteInfo($base_hostname);
+            $num_posts_to_get = $info->post_count; // get all of them
+        } else {
+            $num_posts_to_get = $limit * 2; // Just get the last 2 batches.
+        }
+        $i = 0;
+        while ($i < $num_posts_to_get) {
+            $params = array(
+                'context' => 'edit', // Don't parse shortcodes, etc.
+                'offset' => $offset,
+                'number' => $limit,
+                'type' => 'any',
+                'status' => 'any',
+                'order' => 'DESC',
+                'order_by' => 'date'
+            );
+            $resp = $this->wpcom->getPosts($base_hostname, $params);
+            // If there aren't as many posts as we're trying to get,
+            if ($resp->found <= $num_posts_to_get) {
+                // reset the loop condition so we only try getting
+                // as many posts that actually exist.
+                $num_posts_to_get = $resp->found;
+            }
+            $posts = $resp->posts;
+            foreach (array_reverse($posts) as $post) { // "older" posts first
+                $preexisting_posts = get_posts(array(
+                    'meta_key' => 'wordpress_post_id',
+                    'meta_value' => $post->ID
+                ));
+                if (empty($preexisting_posts)) {
+                    if ($this->importPostFromWordPress($post)) {
+                        $ids_synced[] = $post->ID;
+                    }
+                }
+                $i++; // in foreach cuz we're counting posts
+            }
+            $offset = $offset + $limit; // Set up next fetch.
+        }
+
+        // Record the latest post ID to be sync'ed on the blog.
+        $options['last_synced_ids'][$base_hostname] = ($latest_synced_id > max($ids_synced))
+            ? $latest_synced_id
+            : max($ids_synced);
+        update_option($this->prefix . '_settings', $options);
+    }
+
+    private function importPostFromWordPress ($post) {
+        $wp_post = array();
+        $wp_post['post_name'] = $post->slug;
+        $wp_post['post_content'] = $post->content;
+        $wp_post['post_excerpt'] = $post->excerpt;
+        $wp_post['post_title'] = $post->title;
+        $wp_post['post_status'] = $post->status;
+        $wp_post['post_type'] = $post->type;
+        $wp_post['post_parent'] = (false === $post->parent) ? 0 : $post->parent;
+        $wp_post['post_password'] = $post->password;
+        // TODO: Figure out how to handle multi-author blogs.
+        //$wp_post['post_author'] = $post->author;
+        $wp_post['post_date'] = date('Y-m-d H:i:s', strtotime($post->date));
+        $wp_post['post_date_gmt'] = gmdate('Y-m-d H:i:s', strtotime($post->date));
+        $wp_post['comment_status'] = ($post->comments_open) ? 'open' : 'closed';
+        $wp_post['ping_status'] = ($post->pings_open) ? 'open' : 'closed';
+        $wp_post['tags_input'] = $post->tags;
+        // TODO:
+        //$wp_post['post_category'] = TK;
+
+        $wp_id = wp_insert_post($wp_post);
+        if ($wp_id) {
+            set_post_format($wp_id, $post->format);
+            update_post_meta($wp_id, $this->prefix . '_destination', parse_url($post->URL, PHP_URL_HOST));
+            update_post_meta($wp_id, 'wordpress_post_id', $post->ID);
+            if (!empty($post->metadata)) {
+                foreach ($post->metadata as $m) {
+                    update_post_meta($wp_id, $this->prefix . '_' . parse_url($post->URL, PHP_URL_HOST) . '_' . $m->key, $m->value);
+                }
+            }
+            if ($post->geo) {
+                update_post_meta($wp_id, 'geo_latitude', $post->geo->latitude);
+                update_post_meta($wp_id, 'geo_longitude', $post->geo->longitude);
+                if (!empty($post->geo->address)) {
+                    update_post_meta($wp_id, 'geo_address', $post->geo->address);
+                }
+            }
+
+            // Import attachments
+            if ($post->attachments) {
+                $wp_subdir_from_post_timestamp = date('Y/m', strtotime($post->date));
+                $wp_upload_dir = wp_upload_dir($wp_subdir_from_post_timestamp);
+                if (!is_writable($wp_upload_dir['path'])) {
+                    $msg = sprintf(
+                        esc_html__('Your WordPress uploads directory (%s) is not writeable, so WordPress Crosspost could not import some media files directly into your Media Library. Media (such as images) will be referenced from their remote source rather than imported and referenced locally.', 'wp-crosspost'),
+                        $wp_upload_dir['path']
+                    );
+                    error_log($msg);
+                } else {
+                    foreach ($post->attachments as $attachment) {
+                        $data = wp_remote_get($attachment->URL);
+                        if (200 != $data['response']['code']) {
+                            $msg = sprintf(
+                                esc_html__('Failed to get attachment (%1$s) from post (%2$s). Server responded: %3$s', 'wp-crosspost'),
+                                $attachment->URL,
+                                $post->URL,
+                                print_r($data, true)
+                            );
+                            error_log($msg);
+                        } else {
+                            $f = wp_upload_bits(basename($attachment->URL), null, $data['body'], $wp_subdir_from_post_timestamp);
+                            if ($f['error']) {
+                                $msg = sprintf(
+                                    esc_html__('Error saving file (%s): ', 'wp-crosspost'),
+                                    basename($attachment->URL)
+                                );
+                                error_log($msg);
+                            } else {
+                                $wp_filetype = wp_check_filetype(basename($f['file']));
+                                $wp_file_id = wp_insert_attachment(array(
+                                    'post_title' => basename($f['file'], ".{$wp_filetype['ext']}"),
+                                    'post_content' => '', // Always empty string.
+                                    'post_status' => 'inherit',
+                                    'post_mime_type' => $wp_filetype['type'],
+                                    'guid' => $wp_upload_dir['url'] . '/' . basename($f['file'])
+                                ), $f['file'], $wp_id);
+                                require_once(ABSPATH . 'wp-admin/includes/image.php');
+                                $metadata = wp_generate_attachment_metadata($wp_file_id, $f['file']);
+                                wp_update_attachment_metadata($wp_file_id, $metadata);
+                                $new_content = str_replace($attachment->URL, $f['url'], get_post_field('post_content', $wp_id));
+                                wp_update_post(array(
+                                    'ID' => $wp_id,
+                                    'post_content' => $new_content
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return $wp_id;
+    }
+
     private function getWordPressAppRegistrationUrl () {
         $params = array(
             'title' => get_bloginfo('name'),
@@ -853,6 +1051,36 @@ END_HTML;
         $html .= esc_html($blog->name);
         $html .= '</option>';
         $html .= '</select>';
+        return $html;
+    }
+
+    private function wordpressBlogsListCheckboxes ($attributes = array(), $selected = false) {
+        $html = '';
+        $blog = $this->wpcom->getTokenSiteInfo();
+        $html .= '<li>';
+        $html .= '<label>';
+        $x = parse_url($blog->URL, PHP_URL_HOST);
+        $html .= '<input type="checkbox"';
+        if (!empty($attributes)) {
+            foreach ($attributes as $k => $v) {
+                $html .= ' ';
+                switch ($k) {
+                    case 'id':
+                        $html .= $k . '="' . esc_attr($v) . '-' . esc_attr($x) . '"';
+                        break;
+                    default:
+                        $html .= $k . '="' . esc_attr($v) . '"';
+                        break;
+                }
+            }
+        }
+        if ($selected && in_array($x, $selected)) {
+            $html .= ' checked="checked"';
+        }
+        $html .= ' value="' . esc_attr($x) . '"';
+        $html .= '>';
+        $html .= esc_html($blog->name) . '</label>';
+        $html .= '</li>';
         return $html;
     }
 
