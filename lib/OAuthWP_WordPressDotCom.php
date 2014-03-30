@@ -10,7 +10,7 @@ class OAuthWP_WordPressDotCom extends OAuthWP {
         $this->access_token_url = 'https://public-api.wordpress.com/oauth2/token';
         $this->dialog_url = $this->authorize_url . '?client_id={CLIENT_ID}'
             . '&redirect_uri={REDIRECT_URI}&response_type=code&state={STATE}';
-        $this->authorization_header = 1;
+        $this->access_token_type = 'Bearer';
     }
 
     // Override so clients can ignore the API base url.
