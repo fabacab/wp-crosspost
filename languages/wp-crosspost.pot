@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the WordPress Crosspost package.
 msgid ""
 msgstr ""
-"Project-Id-Version: WordPress Crosspost 0.2\n"
+"Project-Id-Version: WordPress Crosspost 0.3\n"
 "Report-Msgid-Bugs-To: http://wordpress.org/tag/wp-crosspost\n"
-"POT-Creation-Date: 2014-03-30 04:58:40+00:00\n"
+"POT-Creation-Date: 2014-09-28 21:20:46+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -12,112 +12,120 @@ msgstr ""
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 
-#: wp-crosspost.php:79
+#: wp-crosspost.php:81
 msgid "Connect to WordPress.com"
 msgstr ""
 
-#: wp-crosspost.php:79
+#: wp-crosspost.php:81
 msgid ""
 "Almost done! Connect your blog to WordPress.com to begin crossposting with "
 "WP-Crosspost."
 msgstr ""
 
-#: wp-crosspost.php:105
+#: wp-crosspost.php:107
 msgid ""
 "WordPress Crosspost is provided as free software, but sadly grocery stores "
 "do not offer free food. If you like this plugin, please consider %1$s to its "
 "%2$s. &hearts; Thank you!"
 msgstr ""
 
-#: wp-crosspost.php:106
+#: wp-crosspost.php:108
 msgid "making a donation"
 msgstr ""
 
-#: wp-crosspost.php:107
+#: wp-crosspost.php:109
 msgid "houseless, jobless, nomadic developer"
 msgstr ""
 
-#: wp-crosspost.php:127 wp-crosspost.php:666
+#: wp-crosspost.php:129 wp-crosspost.php:777
 msgid "WordPress Crosspost Settings"
 msgstr ""
 
-#. #-#-#-#-#  wp-crosspost.pot (WordPress Crosspost 0.2)  #-#-#-#-#
+#. #-#-#-#-#  wp-crosspost.pot (WordPress Crosspost 0.3)  #-#-#-#-#
 #. Plugin Name of the plugin/theme
-#: wp-crosspost.php:128 wp-crosspost.php:143 wp-crosspost.php:432
+#: wp-crosspost.php:130 wp-crosspost.php:153 wp-crosspost.php:470
 msgid "WordPress Crosspost"
 msgstr ""
 
-#: wp-crosspost.php:183
+#: wp-crosspost.php:137 wp-crosspost.php:138
+msgid "WP-Crosspost-ify Archives"
+msgstr ""
+
+#: wp-crosspost.php:193
 msgid "You can automatically copy this post to your WordPress.com site:"
 msgstr ""
 
-#: wp-crosspost.php:185
+#: wp-crosspost.php:195
 msgid "Compose your post in this blog as you normally would."
 msgstr ""
 
-#: wp-crosspost.php:187
+#: wp-crosspost.php:197
 msgid ""
 "In %sthe WordPress Crosspost box%s, ensure the \"Send this post to WordPress."
 "com?\" option is set to \"Yes.\" (You can set it to \"No\" if you do not "
 "want to copy this post to WordPress.com.)"
 msgstr ""
 
-#: wp-crosspost.php:190
+#: wp-crosspost.php:200
 msgid ""
 "If you have more than one WordPress.com site, choose the one you want to "
 "send this post to from the \"Send to my site\" list."
 msgstr ""
 
-#: wp-crosspost.php:192
+#: wp-crosspost.php:202
 msgid ""
 "When you are done, click \"Publish\" (or \"Save Draft\"), and WP-Crosspost "
 "will send your post to the WordPress.com site you chose."
 msgstr ""
 
-#: wp-crosspost.php:201
+#: wp-crosspost.php:211
 msgid "Crossposting to WordPress.com"
 msgstr ""
 
-#: wp-crosspost.php:205
+#: wp-crosspost.php:215
 msgid "WP-Crosspost:"
 msgstr ""
 
-#: wp-crosspost.php:206
+#: wp-crosspost.php:216
 msgid "WP-Crosspost support forum"
 msgstr ""
 
-#: wp-crosspost.php:207
+#: wp-crosspost.php:217
 msgid "Donate to WP-Crosspost"
 msgstr ""
 
-#: wp-crosspost.php:410
+#: wp-crosspost.php:234 wp-crosspost.php:487 wp-crosspost.php:651
+msgid "View post on WordPress.com"
+msgstr ""
+
+#: wp-crosspost.php:448
 msgid "Crossposting to WordPress.com failed."
 msgstr ""
 
-#: wp-crosspost.php:412
+#: wp-crosspost.php:450
 msgid " Remote service said:"
 msgstr ""
 
-#: wp-crosspost.php:414
+#: wp-crosspost.php:452
 msgid "Response code:"
 msgstr ""
 
-#: wp-crosspost.php:415
+#: wp-crosspost.php:453
 msgid "Response message:"
 msgstr ""
 
-#: wp-crosspost.php:422
+#: wp-crosspost.php:460
 msgid ""
 "This might mean your %1$s are invalid or have been revoked by WordPress.com. "
 "If everything looks fine on your end, you may want to ask %2$s to confirm "
 "your app is still allowed to use their API."
 msgstr ""
 
-#: wp-crosspost.php:423
+#: wp-crosspost.php:461
 msgid "OAuth credentials"
 msgstr ""
 
-#: wp-crosspost.php:430
+#: wp-crosspost.php:468
 msgid ""
 "Unfortunately, I have no idea what WordPress.com is talking about. Consider "
 "asking %1$s for help. Tell them you are using %2$s, that you got the error "
@@ -126,209 +134,264 @@ msgid ""
 "use theirs, too?"
 msgstr ""
 
-#: wp-crosspost.php:438
+#: wp-crosspost.php:476
 msgid ""
 "Additionally, you may want to turn on WordPress Crosspost's \"%s\" option to "
 "get more information about this error the next time it happens."
 msgstr ""
 
-#: wp-crosspost.php:440 wp-crosspost.php:840
+#: wp-crosspost.php:478 wp-crosspost.php:953
 msgid "Enable detailed debugging information?"
 msgstr ""
 
-#: wp-crosspost.php:449
+#: wp-crosspost.php:487
 msgid "Post crossposted."
 msgstr ""
 
-#: wp-crosspost.php:449
-msgid "View post on WordPress.com"
-msgstr ""
-
-#: wp-crosspost.php:477
+#: wp-crosspost.php:507
 msgid "Debug output:"
 msgstr ""
 
-#: wp-crosspost.php:484
+#: wp-crosspost.php:514
 msgid "WordPress.com Support"
 msgstr ""
 
-#: wp-crosspost.php:541
+#: wp-crosspost.php:571
 msgid "Consumer key cannot be empty."
 msgstr ""
 
-#: wp-crosspost.php:548
+#: wp-crosspost.php:578
 msgid "Consumer secret cannot be empty."
 msgstr ""
 
-#: wp-crosspost.php:607
+#: wp-crosspost.php:637
 msgid ""
 "WordPress Crosspost does not yet have a connection to WordPress.com. Are you "
 "sure you connected WordPress Crosspost to your WordPress.com account?"
 msgstr ""
 
-#: wp-crosspost.php:618
+#: wp-crosspost.php:657
 msgid "Send this post to WordPress.com?"
 msgstr ""
 
-#: wp-crosspost.php:619
+#: wp-crosspost.php:658
 msgid ""
 "If this post is in a category that WordPress Crosspost excludes, this will "
 "be ignored."
 msgstr ""
 
-#: wp-crosspost.php:621
+#: wp-crosspost.php:660
 msgid "Yes"
 msgstr ""
 
-#: wp-crosspost.php:622
+#: wp-crosspost.php:661
 msgid "No"
 msgstr ""
 
-#: wp-crosspost.php:626
+#: wp-crosspost.php:665
 msgid "Crossposting options"
 msgstr ""
 
-#: wp-crosspost.php:628
+#: wp-crosspost.php:667
 msgid "Destination & content"
 msgstr ""
 
-#: wp-crosspost.php:630
+#: wp-crosspost.php:669
 msgid "Send to my site named"
 msgstr ""
 
-#: wp-crosspost.php:634
-msgid "Send excerpt instead of main content?"
-msgstr ""
-
-#: wp-crosspost.php:637
+#: wp-crosspost.php:675
 msgid "Uncheck to send post content as crosspost content."
 msgstr ""
 
-#: wp-crosspost.php:651
+#: wp-crosspost.php:677
+msgid "Send excerpt instead of main content?"
+msgstr ""
+
+#: wp-crosspost.php:683
+msgid "Social media broadcasts"
+msgstr ""
+
+#: wp-crosspost.php:685 wp-crosspost.php:947
+msgid "Publicize to my accounts on"
+msgstr ""
+
+#: wp-crosspost.php:690 wp-crosspost.php:699 wp-crosspost.php:706
+#: wp-crosspost.php:713 wp-crosspost.php:720 wp-crosspost.php:727
+#: wp-crosspost.php:734
+msgid "Uncheck to disable the auto-post."
+msgstr ""
+
+#: wp-crosspost.php:692
+msgid "all connected social networks"
+msgstr ""
+
+#: wp-crosspost.php:701
+msgid "Facebook"
+msgstr ""
+
+#: wp-crosspost.php:708
+msgid "LinkedIn"
+msgstr ""
+
+#: wp-crosspost.php:715
+msgid "Google+"
+msgstr ""
+
+#: wp-crosspost.php:722
+msgid "Tumblr"
+msgstr ""
+
+#: wp-crosspost.php:729
+msgid "Twitter"
+msgstr ""
+
+#: wp-crosspost.php:736
+msgid "Path"
+msgstr ""
+
+#: wp-crosspost.php:744
+msgid ""
+"If your WordPress automatically publicizes new posts to your connected "
+"social media accounts, you can customize the message that will appear before "
+"the link to your post by entering it here."
+msgstr ""
+
+#: wp-crosspost.php:746
+msgid "New post: %s :)"
+msgstr ""
+
+#: wp-crosspost.php:747
+msgid ""
+"If you would like a custom message to appear before the link to your post, "
+"enter it here."
+msgstr ""
+
+#: wp-crosspost.php:762
 msgid "You do not have sufficient permissions to access this page."
 msgstr ""
 
-#: wp-crosspost.php:659
+#: wp-crosspost.php:770
 msgid "Disconnected from WordPress.com."
 msgstr ""
 
-#: wp-crosspost.php:660
+#: wp-crosspost.php:771
 msgid ""
 "The connection to WordPress.com was disestablished. You can reconnect using "
 "the same credentials, or enter different credentials before reconnecting."
 msgstr ""
 
-#: wp-crosspost.php:669
+#: wp-crosspost.php:780
 msgid "Connection to WordPress.com"
 msgstr ""
 
-#: wp-crosspost.php:670
+#: wp-crosspost.php:781
 msgid "Required settings to connect to WordPress."
 msgstr ""
 
-#: wp-crosspost.php:674
+#: wp-crosspost.php:785
 msgid "WordPress Client ID"
 msgstr ""
 
-#: wp-crosspost.php:677
+#: wp-crosspost.php:788
 msgid "Paste your Client ID key here"
 msgstr ""
 
-#: wp-crosspost.php:679
+#: wp-crosspost.php:790
 msgid ""
 "Your WordPress Client ID is also called your \"API key\" or \"consumer key.\""
 msgstr ""
 
-#: wp-crosspost.php:681
+#: wp-crosspost.php:792
 msgid "If you need a Client ID, you can %s."
 msgstr ""
 
-#: wp-crosspost.php:683
+#: wp-crosspost.php:794
 msgid ""
 "Get a Client ID from WordPress.com by registering your WordPress blog as a "
 "new WordPress.com app."
 msgstr ""
 
-#: wp-crosspost.php:684
+#: wp-crosspost.php:795
 msgid "create one here"
 msgstr ""
 
-#: wp-crosspost.php:691
+#: wp-crosspost.php:802
 msgid "OAuth consumer secret"
 msgstr ""
 
-#: wp-crosspost.php:694
+#: wp-crosspost.php:805
 msgid "Paste your client secret here"
 msgstr ""
 
-#: wp-crosspost.php:696
+#: wp-crosspost.php:807
 msgid ""
 "Your client secret, also called your \"consumer secret,\" is like your app "
 "password. Never share this with anyone."
 msgstr ""
 
-#: wp-crosspost.php:703
+#: wp-crosspost.php:814
 msgid "Connect to WordPress.com:"
 msgstr ""
 
-#: wp-crosspost.php:706
+#: wp-crosspost.php:817
 msgid "Click here to connect to WordPress.com"
 msgstr ""
 
-#: wp-crosspost.php:714
+#: wp-crosspost.php:825
 msgid "Connected to WordPress.com!"
 msgstr ""
 
-#: wp-crosspost.php:715
+#: wp-crosspost.php:826
 msgid "Disconnect"
 msgstr ""
 
-#: wp-crosspost.php:716
+#: wp-crosspost.php:827
 msgid ""
 "Disconnecting will stop cross-posts from appearing on or being imported from "
 "your WordPress.com site(s), and will reset the options below to their "
 "defaults. You can re-connect at any time."
 msgstr ""
 
-#: wp-crosspost.php:726
+#: wp-crosspost.php:837
 msgid "Crossposting Options"
 msgstr ""
 
-#: wp-crosspost.php:727
+#: wp-crosspost.php:838
 msgid "Options for customizing crossposting behavior."
 msgstr ""
 
-#: wp-crosspost.php:731
+#: wp-crosspost.php:842
 msgid "Default WordPress blog for crossposts"
 msgstr ""
 
-#: wp-crosspost.php:735
+#: wp-crosspost.php:846
 msgid ""
 "Choose which WordPress blog you want to send your posts to by default. This "
 "can be overriden on a per-post basis, too."
 msgstr ""
 
-#: wp-crosspost.php:740
+#: wp-crosspost.php:851
 msgid "Sync posts from WordPress.com"
 msgstr ""
 
-#: wp-crosspost.php:741
+#: wp-crosspost.php:852
 msgid ""
 "(This feature is experimental. Please backup your website before you turn "
 "this on.)"
 msgstr ""
 
-#: wp-crosspost.php:747
+#: wp-crosspost.php:858
 msgid ""
 "Content you create on the WordPress blogs you select will automatically be "
 "copied to this blog."
 msgstr ""
 
-#: wp-crosspost.php:752
+#: wp-crosspost.php:863
 msgid "Do not crosspost entries in these categories:"
 msgstr ""
 
-#: wp-crosspost.php:769
+#: wp-crosspost.php:880
 msgid ""
 "Will cause posts in the specificied categories never to be crossposted. This "
 "is useful if, for instance, you are creating posts automatically using "
@@ -336,22 +399,11 @@ msgid ""
 "forth from one service to another."
 msgstr ""
 
-#: wp-crosspost.php:774
-msgid "Do not crosspost comments:"
-msgstr ""
-
-#: wp-crosspost.php:778
-msgid ""
-"When enabled, comments on this blog are not cross-posted. Otherwise, and by "
-"default, comments made on this blog will be crossposted if the post about "
-"which the comment was made has already been crossposted."
-msgstr ""
-
-#: wp-crosspost.php:783
+#: wp-crosspost.php:885
 msgid "Send excerpts instead of main content?"
 msgstr ""
 
-#: wp-crosspost.php:787
+#: wp-crosspost.php:889
 msgid ""
 "When enabled, the excerpts (as opposed to the body) of your WordPress posts "
 "will be used as the main content of your crossposts. Useful if you prefer to "
@@ -359,23 +411,23 @@ msgid ""
 "This can be overriden on a per-post basis, too."
 msgstr ""
 
-#: wp-crosspost.php:792
+#: wp-crosspost.php:894
 msgid "Add the following markup to each crossposted entry:"
 msgstr ""
 
-#: wp-crosspost.php:798
+#: wp-crosspost.php:900
 msgid "Anything you type in this box will be added to every crosspost."
 msgstr ""
 
-#: wp-crosspost.php:802
+#: wp-crosspost.php:904
 msgid "Go to the original post."
 msgstr ""
 
-#: wp-crosspost.php:802
+#: wp-crosspost.php:904
 msgid "was originally published on"
 msgstr ""
 
-#: wp-crosspost.php:805
+#: wp-crosspost.php:907
 msgid ""
 "Text or HTML you want to add to each post. Useful for things like a link "
 "back to your original post. You can use <code>%permalink%</code>, <code>"
@@ -384,37 +436,37 @@ msgid ""
 "homepage for this site, and the name of this blog, respectively."
 msgstr ""
 
-#: wp-crosspost.php:810 wp-crosspost.php:834
+#: wp-crosspost.php:912 wp-crosspost.php:936
 msgid "Do not send post tags in crossposts"
 msgstr ""
 
-#: wp-crosspost.php:814
+#: wp-crosspost.php:916
 msgid ""
 "When enabled, tags on your WordPress posts are not applied to your "
 "crossposts. Useful if you maintain different taxonomies on your different "
 "sites."
 msgstr ""
 
-#: wp-crosspost.php:819
+#: wp-crosspost.php:921
 msgid "Do not send post categories in crossposts"
 msgstr ""
 
-#: wp-crosspost.php:823
+#: wp-crosspost.php:925
 msgid ""
 "When enabled, categories on your WordPress posts are not applied to your "
 "crossposts. Useful if you maintain different taxonomies on your different "
 "sites."
 msgstr ""
 
-#: wp-crosspost.php:829
+#: wp-crosspost.php:931
 msgid "Automatically add these tags to all crossposts:"
 msgstr ""
 
-#: wp-crosspost.php:833
+#: wp-crosspost.php:935
 msgid "crosspost, magic"
 msgstr ""
 
-#: wp-crosspost.php:834
+#: wp-crosspost.php:936
 msgid ""
 "Comma-separated list of additional tags that will be added to every "
 "crosspost. Useful if only some posts on your other blog are cross-posted and "
@@ -422,7 +474,20 @@ msgid ""
 "tags will always be applied regardless of the value of the \"%s\" option.)"
 msgstr ""
 
-#: wp-crosspost.php:847
+#: wp-crosspost.php:942
+msgid ""
+"Automatically publicize a link to your WordPress post on connected social "
+"networks?"
+msgstr ""
+
+#: wp-crosspost.php:947
+msgid ""
+"When checked, new posts you create on WordPress will have their \"%s\" "
+"option enabled by default. You can always override this when editing an "
+"individual post."
+msgstr ""
+
+#: wp-crosspost.php:960
 msgid ""
 "Turn this on only if you are experiencing problems using this plugin, or if "
 "you were told to do so by someone helping you fix a problem (or if you "
@@ -435,7 +500,41 @@ msgid ""
 "issue."
 msgstr ""
 
-#: wp-crosspost.php:998
+#: wp-crosspost.php:1005
+msgid "Success! %1$d post has been crossposted."
+msgid_plural "Success! %1$d posts have been crossposted to %2$d blogs."
+msgstr[0] ""
+msgstr[1] ""
+
+#: wp-crosspost.php:1014
+msgid "Blogs touched:"
+msgstr ""
+
+#: wp-crosspost.php:1027
+msgid "Crosspost Archives to WordPress.com"
+msgstr ""
+
+#: wp-crosspost.php:1028
+msgid ""
+"If you have post archives on this website, WordPress Crosspost can copy them "
+"to your WordPress.com blog."
+msgstr ""
+
+#: wp-crosspost.php:1029
+msgid "Crosspost-ify Everything!"
+msgstr ""
+
+#: wp-crosspost.php:1030
+msgid ""
+"Copies all posts from your archives to your default WordPress.com blog (%s). "
+"This may take some time if you have a lot of content. If you do not want to "
+"crosspost a specific post, set the answer to the \"Send this post to "
+"WordPress.com?\" question to \"No\" when editing those posts before taking "
+"this action. If you have previously crossposted some posts, this will update "
+"that content on your WordPress.com blog(s)."
+msgstr ""
+
+#: wp-crosspost.php:1206
 msgid ""
 "Your WordPress uploads directory (%s) is not writeable, so WordPress "
 "Crosspost could not import some media files directly into your Media "
@@ -443,12 +542,12 @@ msgid ""
 "rather than imported and referenced locally."
 msgstr ""
 
-#: wp-crosspost.php:1007
+#: wp-crosspost.php:1215
 msgid ""
 "Failed to get attachment (%1$s) from post (%2$s). Server responded: %3$s"
 msgstr ""
 
-#: wp-crosspost.php:1017
+#: wp-crosspost.php:1225
 msgid "Error saving file (%s): "
 msgstr ""
 

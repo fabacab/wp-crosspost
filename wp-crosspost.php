@@ -3,7 +3,7 @@
  * Plugin Name: WordPress Crosspost
  * Plugin URI: https://github.com/meitar/wp-crosspost/#readme
  * Description: Automatically crossposts to your WordPress.com site when you publish a post on your (self-hosted) WordPress blog.
- * Version: 0.2.1
+ * Version: 0.3
  * Author: Meitar Moscovitz
  * Author URI: http://maymay.net/
  * Text Domain: wp-crosspost
@@ -26,9 +26,13 @@ class WP_Crosspost {
 
         add_action($this->prefix . '_sync_content', array($this, 'syncFromWordPressBlog'));
 
+        add_filter('post_row_actions', array($this, 'addWordPressPermalinkRowAction'), 10, 2);
+
         // Both 'trash_post' and 'before_delete_post' to mimic moving to trash.
         add_action('trash_post', array($this, 'removeFromService'));
         add_action('before_delete_post', array($this, 'removeFromService'));
+
+        register_deactivation_hook(__FILE__, array($this, 'deactivate'));
 
         $options = get_option($this->prefix . '_settings');
         // Initialize consumer if we can, set up authroization flow if we can't.
@@ -128,6 +132,14 @@ esc_html__('WordPress Crosspost is provided as free software, but sadly grocery 
             $this->prefix . '_settings',
             array($this, 'renderOptionsPage')
         );
+
+        add_management_page(
+            __('WP-Crosspost-ify Archives', 'wp-crosspost'),
+            __('WP-Crosspost-ify Archives', 'wp-crosspost'),
+            'manage_options',
+            $this->prefix . '_crosspost_archives',
+            array($this, 'dispatchCrosspostArchivesPages')
+        );
     }
 
     public function registerAdminScripts () {
@@ -211,6 +223,19 @@ END_HTML;
         $screen->set_help_sidebar($screen->get_help_sidebar() . $sidebar);
     }
 
+    public function addWordPressPermalinkRowAction ($actions, $post) {
+        $wpcom_id = get_post_meta($post->ID, 'wordpress_post_id', true);
+        if ($wpcom_id) {
+            $base_hostname = get_post_meta($post->ID, 'wp_crosspost_destination', true);
+            if (empty($base_hostname)) { // fallback to default blog domain
+                $options = get_option($this->prefix . '_settings');
+                $base_hostname = $options['default_hostname'];
+            }
+            $actions['view_on_wordpress'] = '<a href="https://' . $base_hostname . '/?p=' . $wpcom_id . '">' . esc_html__('View post on WordPress.com', 'wp-crosspost') . '</a>';
+        }
+        return $actions;
+    }
+
     /**
      * Translates a WordPress post status to a WordPress.com API post status.
      *
@@ -242,7 +267,7 @@ END_HTML;
      */
     private function crosspostToWordPressDotCom ($blog, $params, $pid = false, $deleting = false) {
         // TODO: Smoothen this deleting thing.
-        //       Cancel WordPress deletions if Tumblr deletions aren't working?
+        //       Cancel WordPress deletions if WordPress.com deletions aren't working?
         if ($deleting === true && $pid) {
             return $this->wpcom->deleteFromService($blog, $pid, $params);
         } else if ($pid) {
@@ -328,10 +353,13 @@ END_HTML;
             'categories' => implode(',', $categories),
             'slug' => get_post_field('post_name', $post_id),
             'comments_open' => comments_open($post_id),
-            'pings_open' => pings_open($post_id)
-            // TODO: 'publicize' => 
+            'pings_open' => pings_open($post_id),
+            'sticky' => is_sticky($post_id)
+            // 'publicize' is handled directly in savePost()
+            // TODO: 'featured_image'
             // TODO: 'media' => 
             // TODO: 'metadata' => 
+            // TODO: 'sharing_enabled' =>
         );
 
         if (!empty($options['exclude_tags'])) { unset($common_params['tags']); }
@@ -406,6 +434,15 @@ END_HTML;
         }
 
         if ($prepared_post = $this->prepareForWordPressDotCom($post_id)) {
+            // TODO: For some reason array values to `publicize` aren't working. :(
+            //       Use booleans only for now.
+            if (isset($_POST[$this->prefix . '_publicize'])) {
+//                $prepared_post->params['publicize'] = array_map('sanitize_text_field', $_POST[$this->prefix . '_publicize']);
+//                $prepared_post->params['publicize_message'] = sanitize_text_field($_POST[$this->prefix . '_publicize_message']);
+                $prepared_post->params['publicize'] = true;
+            } else {
+                $prepared_post->params['publicize'] = false;
+            }
             $data = $this->crosspostToWordPressDotCom($prepared_post->base_hostname, $prepared_post->params, $prepared_post->wpcom_pid);
             if (empty($data->ID)) {
                 $msg = esc_html__('Crossposting to WordPress.com failed.', 'wp-crosspost');
@@ -565,6 +602,7 @@ END_HTML;
                 case 'use_excerpt':
                 case 'exclude_tags':
                 case 'exclude_categories':
+                case 'auto_publicize':
                 case 'debug':
                     $safe_input[$k] = intval($v);
                 break;
@@ -605,6 +643,15 @@ END_HTML;
         $x = get_post_meta($post->ID, $this->prefix . '_crosspost', true);
         $d = $this->getWordPressSiteId($post->ID);
         $e = intVal($this->getSettingForPost('use_excerpt', $post->ID));
+
+        $wpcom_id = get_post_meta($post->ID, 'wordpress_post_id', true);
+        if ('publish' === $post->post_status && $wpcom_id) {
+?>
+<p>
+    <a href="https://<?php print esc_attr($d);?>/?p=<?php print esc_attr($wpcom_id);?>" class="button button-small"><?php esc_html_e('View post on WordPress.com', 'wp-crosspost');?></a>
+</p>
+<?php
+        }
 ?>
 <fieldset>
     <legend style="display:block;"><?php esc_html_e('Send this post to WordPress.com?', 'wp-crosspost');?></legend>
@@ -623,17 +670,89 @@ END_HTML;
             <?php print $this->wordpressBlogsSelectField(array('name' => $this->prefix . '_destination'), $d);?>
         </label></p>
         <p><label>
+            <input type="checkbox" name="<?php esc_attr_e($this->prefix);?>_use_excerpt" value="1"
+                <?php if (1 === $e) { print 'checked="checked"'; } ?>
+                title="<?php esc_html_e('Uncheck to send post content as crosspost content.', 'wp-crosspost');?>"
+                />
             <?php esc_html_e('Send excerpt instead of main content?', 'wp-crosspost');?>
-                <input type="checkbox" name="<?php esc_attr_e($this->prefix);?>_use_excerpt" value="1"
-                    <?php if (1 === $e) { print 'checked="checked"'; } ?>
-                    title="<?php esc_html_e('Uncheck to send post content as crosspost content.', 'wp-crosspost');?>"
-                    />
         </label></p>
     </details>
 </fieldset>
+    <?php if ($post->post_status !== 'publish') { ?>
+<fieldset>
+    <legend><?php esc_html_e('Social media broadcasts', 'wp-crosspost');?></legend>
+    <details open="open"><!-- Leave open until browsers work out their keyboard accessibility issues with this. -->
+        <summary><?php esc_html_e('Publicize to my accounts on', 'wp-crosspost');?></summary>
+        <ul>
+            <li><label>
+                <input type="checkbox" name="<?php esc_attr_e($this->prefix);?>_publicize[]" value="1"
+                    <?php if (!empty($options['auto_publicize'])) { ?>checked="checked"<?php } ?>
+                    title="<?php esc_html_e('Uncheck to disable the auto-post.', 'wp-crosspost');?>"
+                    />
+                <?php esc_html_e('all connected social networks', 'wp-crosspost');?>
+            </label></li>
+<!--
+TODO: Why won't an array value work?
+            <li><label>
+                <input type="checkbox" name="<?php esc_attr_e($this->prefix);?>_publicize[]" value="Facebook"
+                    <?php if (!empty($options['auto_publicize'])) { ?>checked="checked"<?php } ?>
+                    title="<?php esc_html_e('Uncheck to disable the auto-post.', 'wp-crosspost');?>"
+                    />
+                <?php esc_html_e('Facebook', 'wp-crosspost');?>
+            </label></li>
+            <li><label>
+                <input type="checkbox" name="<?php esc_attr_e($this->prefix);?>_publicize[]" value="LinkedIn"
+                    <?php if (!empty($options['auto_publicize'])) { ?>checked="checked"<?php } ?>
+                    title="<?php esc_html_e('Uncheck to disable the auto-post.', 'wp-crosspost');?>"
+                    />
+                <?php esc_html_e('LinkedIn', 'wp-crosspost');?>
+            </label></li>
+            <li><label>
+                <input type="checkbox" name="<?php esc_attr_e($this->prefix);?>_publicize[]" value="GooglePlus"
+                    <?php if (!empty($options['auto_publicize'])) { ?>checked="checked"<?php } ?>
+                    title="<?php esc_html_e('Uncheck to disable the auto-post.', 'wp-crosspost');?>"
+                    />
+                <?php esc_html_e('Google+', 'wp-crosspost');?>
+            </label></li>
+            <li><label>
+                <input type="checkbox" name="<?php esc_attr_e($this->prefix);?>_publicize[]" value="Tumblr"
+                    <?php if (!empty($options['auto_publicize'])) { ?>checked="checked"<?php } ?>
+                    title="<?php esc_html_e('Uncheck to disable the auto-post.', 'wp-crosspost');?>"
+                    />
+                <?php esc_html_e('Tumblr', 'wp-crosspost');?>
+            </label></li>
+            <li><label>
+                <input type="checkbox" name="<?php esc_attr_e($this->prefix);?>_publicize[]" value="Twitter"
+                    <?php if (!empty($options['auto_publicize'])) { ?>checked="checked"<?php } ?>
+                    title="<?php esc_html_e('Uncheck to disable the auto-post.', 'wp-crosspost');?>"
+                    />
+                <?php esc_html_e('Twitter', 'wp-crosspost');?>
+            </label></li>
+            <li><label>
+                <input type="checkbox" name="<?php esc_attr_e($this->prefix);?>_publicize[]" value="Path"
+                    <?php if (!empty($options['auto_publicize'])) { ?>checked="checked"<?php } ?>
+                    title="<?php esc_html_e('Uncheck to disable the auto-post.', 'wp-crosspost');?>"
+                    />
+                <?php esc_html_e('Path', 'wp-crosspost');?>
+            </label></li>
+-->
+        </ul>
+        <p>
+            <label>
+                <textarea id="<?php esc_attr_e($this->prefix);?>_publicize_message"
+                    name="<?php esc_attr_e($this->prefix);?>_publicize_message"
+                    title="<?php esc_attr_e('If your WordPress automatically publicizes new posts to your connected social media accounts, you can customize the message that will appear before the link to your post by entering it here.', 'wp-crosspost');?>"
+                    style="width:100%;"
+                    placeholder="<?php print sprintf(esc_attr__('New post: %s :)', 'tumblr-crosspostr'), esc_attr__($post->post_title));?>"></textarea>
+                <span class="description"><?php esc_html_e('If you would like a custom message to appear before the link to your post, enter it here.', 'wp-crosspost');?></span>
+            </label>
+        </p>
+    </details>
+</fieldset>
 <?php
+        }
     }
-    
+
     /**
      * Writes the HTML for the options page, and each setting, as needed.
      */
@@ -819,6 +938,17 @@ END_HTML;
         </tr>
         <tr>
             <th>
+                <label for="<?php esc_attr_e($this->prefix);?>_auto_publicize">
+                    <?php esc_html_e('Automatically publicize a link to your WordPress post on connected social networks?', 'wp-crosspost');?>
+                </label>
+            </th>
+            <td>
+                <input type="checkbox" <?php if (isset($options['auto_publicize'])) : print 'checked="checked"'; endif; ?> value="1" id="<?php esc_attr_e($this->prefix);?>_auto_publicize" name="<?php esc_attr_e($this->prefix);?>_settings[auto_publicize]" />
+                <label for="<?php esc_attr_e($this->prefix);?>_auto_publicize"><span class="description"><?php print sprintf(esc_html__('When checked, new posts you create on WordPress will have their "%s" option enabled by default. You can always override this when editing an individual post.', 'wp-crosspost'), esc_html__('Publicize to my accounts on', 'wp-crosspost'));?></span></label>
+            </td>
+        </tr>
+        <tr>
+            <th>
                 <label for="<?php esc_attr_e($this->prefix);?>_debug">
                     <?php esc_html_e('Enable detailed debugging information?', 'wp-crosspost');?>
                 </label>
@@ -845,6 +975,69 @@ END_HTML;
         $this->showDonationAppeal();
     } // end public function renderOptionsPage
 
+    public function dispatchCrosspostArchivesPages () {
+        if (!isset($_GET[$this->prefix . '_nonce']) || !wp_verify_nonce($_GET[$this->prefix . '_nonce'], 'crosspost_everything')) {
+            $this->renderManagementPage();
+        } else {
+            if (!$this->isConnectedToService()) {
+                wp_redirect(admin_url('options-general.php?page=' . $this->prefix . '_settings'));
+                exit();
+            }
+            $posts = get_posts(array(
+                'nopaging' => true,
+                'order' => 'ASC',
+            ));
+            $crosspostified = array();
+            foreach ($posts as $post) {
+                if ($prepared_post = $this->prepareForWordPressDotCom($post->ID)) {
+                    $data = $this->crosspostToWordPressDotCom($prepared_post->base_hostname, $prepared_post->params, $prepared_post->wpcom_pid);
+                    update_post_meta($post->ID, 'wordpress_post_id', $data->ID);
+                    $crosspostified[] = array('id' => $data->ID, 'base_hostname' => $prepared_post->base_hostname);
+                }
+            }
+            $blogs = array();
+            foreach ($crosspostified as $p) {
+                $blogs[] = $p['base_hostname'];
+            }
+            $blogs_touched = count(array_unique($blogs));
+            $posts_touched = count($crosspostified);
+            print '<p>' . sprintf(
+                _n(
+                    'Success! %1$d post has been crossposted.',
+                    'Success! %1$d posts have been crossposted to %2$d blogs.',
+                    $posts_touched,
+                    'wp-crosspost'
+                ),
+                $posts_touched,
+                $blogs_touched
+            ) . '</p>';
+            print '<p>' . esc_html_e('Blogs touched:', 'wp-crosspost') . '</p>';
+            print '<ul>';
+            foreach (array_unique($blogs) as $blog) {
+                print '<li><a href="' . esc_url("https://$blog/") . '">' . esc_html($blog) . '</a></li>';
+            }
+            print '</ul>';
+            $this->showDonationAppeal();
+        }
+    }
+
+    private function renderManagementPage () {
+        $options = get_option($this->prefix . '_settings');
+?>
+<h2><?php esc_html_e('Crosspost Archives to WordPress.com', 'wp-crosspost');?></h2>
+<p><?php esc_html_e('If you have post archives on this website, WordPress Crosspost can copy them to your WordPress.com blog.', 'wp-crosspost');?></p>
+<p><a href="<?php print wp_nonce_url(admin_url('tools.php?page=' . $this->prefix . '_crosspost_archives'), 'crosspost_everything', $this->prefix . '_nonce');?>" class="button button-primary"><?php esc_html_e('Crosspost-ify Everything!', 'wp-crosspost');?></a></p>
+<p class="description"><?php print sprintf(esc_html__('Copies all posts from your archives to your default WordPress.com blog (%s). This may take some time if you have a lot of content. If you do not want to crosspost a specific post, set the answer to the "Send this post to WordPress.com?" question to "No" when editing those posts before taking this action. If you have previously crossposted some posts, this will update that content on your WordPress.com blog(s).', 'wp-crosspost'), '<code>' . esc_html($options['default_hostname']) . '</code>');?></p>
+<?php
+        $this->showDonationAppeal();
+    } // end renderManagementPage ()
+
+
+    private function getBlogsToSync () {
+        $options = get_option($this->prefix . '_settings');
+        return (empty($options['sync_content'])) ? array() : $options['sync_content'];
+    }
+
     public function setSyncSchedules () {
         if (!$this->isConnectedToService()) { return; }
         $options = get_option($this->prefix . '_settings');
@@ -870,6 +1063,15 @@ END_HTML;
                 $this->prefix . '_sync_content',
                 array($x)
             );
+        }
+    }
+
+    public function deactivate () {
+        $blogs_to_sync = $this->getBlogsToSync();
+        if (!empty($blogs_to_sync)) {
+            foreach ($blogs_to_sync as $blog) {
+                wp_clear_scheduled_hook($this->prefix . '_sync_content', array($blog));
+            }
         }
     }
 
@@ -934,6 +1136,30 @@ END_HTML;
         update_option($this->prefix . '_settings', $options);
     }
 
+    /**
+     * Searches the site taxonomy for categories matching the input object.
+     *
+     * @param object $categories Categories object returned by WordPress.com REST API
+     * @return array An array of integers of local category IDs as closely matched as possible to the input.
+     */
+    private function correlateCategories ($categories) {
+        require_once ABSPATH . 'wp-admin/includes/taxonomy.php'; // in case we're doing CRON
+        $cat_ids = array();
+        foreach ($categories as $k => $v) {
+            if ($c = get_category_by_slug($v->slug)) {
+                $cat_ids[] = $c->term_id;
+            } else {
+                $cat_ids[] = wp_insert_category(array(
+                    'cat_name' => $v->name,
+                    'category_nicename' => $v->slug,
+                    'category_description' => $v->description
+                    // TODO: Mirror category hierarchy with parents?
+                ));
+            }
+        }
+        return $cat_ids;
+    }
+
     private function importPostFromWordPress ($post) {
         $wp_post = array();
         $wp_post['post_name'] = $post->slug;
@@ -951,8 +1177,7 @@ END_HTML;
         $wp_post['comment_status'] = ($post->comments_open) ? 'open' : 'closed';
         $wp_post['ping_status'] = ($post->pings_open) ? 'open' : 'closed';
         $wp_post['tags_input'] = $post->tags;
-        // TODO:
-        //$wp_post['post_category'] = TK;
+        $wp_post['post_category'] = $this->correlateCategories($post->categories);
 
         $wp_id = wp_insert_post($wp_post);
         if ($wp_id) {

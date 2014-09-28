@@ -3,8 +3,8 @@ Contributors: meitar
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meitarm%40gmail%2ecom&lc=US&item_name=WP%20Crosspost%20WordPress%20Plugin&item_number=wp%2dcrosspost&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 Tags: WordPress.com, post, crosspost, publishing
 Requires at least: 3.1
-Tested up to: 3.8.1
-Stable tag: 0.2.1
+Tested up to: 4.0
+Stable tag: 0.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -96,6 +96,17 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 5. Get help where you need it from WordPress's built-in "Help" system.
 
 == Changelog ==
+
+= Version 0.3 =
+
+* Feature: [Publicize](https://support.wordpress.com/publicize/) integration enables you to broadcast a link to your crossposted post on your Facebook, LinkedIn, Google+, Tumblr, Twitter, or Path account. Simply connect the service of your choice to your WordPress.com blog and crosspost as usual.
+    * Attention **Tumblr users,** I strongly recommend using the [Tumblr Crosspostr](https://wordpress.org/plugins/tumblr-crosspostr/) plugin instead. It provides more seamless integration, greater customization, better attribution options, and doesn't rely on the third-party cloud services that Publicize does.
+* Feature: Option to set global default value for Publicize integration. Useful for multi-author blogs and customized editorial workflows. (You can still override this on a per-post basis.)
+* Feature: "Crosspost-ify Everything!" tool enables one-click crossposting of your entire blog archive.
+* Feature: [Post stickiness](https://codex.wordpress.org/Sticky_Posts) is now cross-posted, too.
+* Feature: Post categories are now imported when sync'ing.
+* Feature: Show "View post on WordPress.com" link in Posts listing screen, and in Post Edit screen inside WordPress Crosspost custom metabox.
+* Bugfix: Remove sync schedules on plugin deactivation. (This improves performance, security, and prevents errors by ensuring any WordPress.com synchronization routines are not invoked if you have deactivated but not deleted WP-Crosspost.)
 
 = Version 0.2.1 =
 
