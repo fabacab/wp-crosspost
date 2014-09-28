@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meita
 Tags: WordPress.com, post, crosspost, publishing
 Requires at least: 3.1
 Tested up to: 4.0
-Stable tag: 0.3
+Stable tag: 0.3.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -96,6 +96,10 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 5. Get help where you need it from WordPress's built-in "Help" system.
 
 == Changelog ==
+
+= Version 0.3.1 =
+
+* [Bugfix](https://wordpress.org/support/topic/seems-to-work-better-than-other-plugins-but): Respect "Do not send post categories in crossposts" option. Also fixes issues with category-based crossposting exclusion.
 
 = Version 0.3 =
 

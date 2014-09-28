@@ -3,7 +3,7 @@
  * Plugin Name: WordPress Crosspost
  * Plugin URI: https://github.com/meitar/wp-crosspost/#readme
  * Description: Automatically crossposts to your WordPress.com site when you publish a post on your (self-hosted) WordPress blog.
- * Version: 0.3
+ * Version: 0.3.1
  * Author: Meitar Moscovitz
  * Author URI: http://maymay.net/
  * Text Domain: wp-crosspost
@@ -363,7 +363,7 @@ END_HTML;
         );
 
         if (!empty($options['exclude_tags'])) { unset($common_params['tags']); }
-        if (!empty($options['exclude_categories'])) { unset($common_params['categories']); }
+        if (!empty($options['crosspost_categories'])) { unset($common_params['categories']); }
 
         if (!empty($options['additional_tags'])) {
             if (!isset($common_params['tags'])) {
@@ -601,7 +601,7 @@ END_HTML;
                 break;
                 case 'use_excerpt':
                 case 'exclude_tags':
-                case 'exclude_categories':
+                case 'crosspost_categories':
                 case 'auto_publicize':
                 case 'debug':
                     $safe_input[$k] = intval($v);
@@ -918,11 +918,11 @@ TODO: Why won't an array value work?
         </tr>
         <tr>
             <th>
-                <label for="<?php esc_attr_e($this->prefix);?>_exclude_categories"><?php esc_html_e('Do not send post categories in crossposts', 'wp-crosspost');?></label>
+                <label for="<?php esc_attr_e($this->prefix);?>_crosspost_categories"><?php esc_html_e('Do not send post categories in crossposts', 'wp-crosspost');?></label>
             </th>
             <td>
-                <input type="checkbox" <?php if (isset($options['exclude_categories'])) : print 'checked="checked"'; endif; ?> value="1" id="<?php esc_attr_e($this->prefix);?>_exclude_categories" name="<?php esc_attr_e($this->prefix);?>_settings[exclude_categories]" />
-                <label for="<?php esc_attr_e($this->prefix);?>_exclude_categories"><span class="description"><?php esc_html_e('When enabled, categories on your WordPress posts are not applied to your crossposts. Useful if you maintain different taxonomies on your different sites.', 'wp-crosspost');?></span></label>
+                <input type="checkbox" <?php if (isset($options['crosspost_categories'])) : print 'checked="checked"'; endif; ?> value="1" id="<?php esc_attr_e($this->prefix);?>_crosspost_categories" name="<?php esc_attr_e($this->prefix);?>_settings[crosspost_categories]" />
+                <label for="<?php esc_attr_e($this->prefix);?>_crosspost_categories"><span class="description"><?php esc_html_e('When enabled, categories on your WordPress posts are not applied to your crossposts. Useful if you maintain different taxonomies on your different sites.', 'wp-crosspost');?></span></label>
             </td>
         </tr>
         <tr>
