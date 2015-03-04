@@ -3,8 +3,8 @@ Contributors: meitar
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meitarm%40gmail%2ecom&lc=US&item_name=WP%20Crosspost%20WordPress%20Plugin&item_number=wp%2dcrosspost&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 Tags: WordPress.com, post, crosspost, publishing
 Requires at least: 3.1
-Tested up to: 4.0
-Stable tag: 0.3.1
+Tested up to: 4.1.1
+Stable tag: 0.3.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -96,6 +96,12 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 5. Get help where you need it from WordPress's built-in "Help" system.
 
 == Changelog ==
+
+= Version 0.3.2 =
+
+* Feature: Support [`rel-syndication` IndieWeb pattern](https://indiewebcamp.com/rel-syndication) as implemented by the recommended [Syndication Links](https://indiewebcamp.com/rel-syndication#How_to_link_from_WordPress) plugin.
+    * `rel-syndication` is an IndieWeb best practice recommendation that provides a way to automatically link to crossposted copies (called "POSSE'd copies" in the jargon) of your posts to improve the discoverability and usability of your posts. For Tumblr Crosspostr's `rel-syndication` to work, you must also install a compatible WordPress syndication links plugin, such as the [Syndication Links](https://wordpress.org/plugins/syndication-links/) plugin, but the absence of such a plugin will not cause any problems, either.
+* Bugfix: Consistent post meta field names resolve several issues where previously-crossposted entries were not found or had incorrect syndication links associated with them.
 
 = Version 0.3.1 =
 

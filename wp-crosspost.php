@@ -3,7 +3,7 @@
  * Plugin Name: WordPress Crosspost
  * Plugin URI: https://github.com/meitar/wp-crosspost/#readme
  * Description: Automatically crossposts to your WordPress.com site when you publish a post on your (self-hosted) WordPress blog.
- * Version: 0.3.1
+ * Version: 0.3.2
  * Author: Meitar Moscovitz
  * Author URI: http://maymay.net/
  * Text Domain: wp-crosspost
@@ -16,6 +16,7 @@ class WP_Crosspost {
 
     public function __construct () {
         add_action('plugins_loaded', array($this, 'registerL10n'));
+        add_action('init', array($this, 'updateChangedSettings'));
         add_action('init', array($this, 'setSyncSchedules'));
         add_action('admin_init', array($this, 'registerSettings'));
         add_action('admin_menu', array($this, 'registerAdminMenu'));
@@ -26,7 +27,8 @@ class WP_Crosspost {
 
         add_action($this->prefix . '_sync_content', array($this, 'syncFromWordPressBlog'));
 
-        add_filter('post_row_actions', array($this, 'addWordPressPermalinkRowAction'), 10, 2);
+        add_filter('post_row_actions', array($this, 'addPostRowAction'), 10, 2);
+        add_filter('syn_add_links', array($this, 'addSyndicatedLinks'));
 
         // Both 'trash_post' and 'before_delete_post' to mimic moving to trash.
         add_action('trash_post', array($this, 'removeFromService'));
@@ -63,6 +65,22 @@ class WP_Crosspost {
         }
     }
 
+    // Detects old options/settings and migrates them to current version.
+    public function updateChangedSettings () {
+        // move any post meta fields from wp_crosspost_post_id to wordpress_post_id
+        // TODO: For managing multiple crosspost copies, this field needs to be changed
+        //       in some way to support more than one possible ID value. Hmm. :\
+        global $wpdb;
+        $wpdb->update(
+            $wpdb->postmeta, // UPDATE $wpdb->postmeta
+            array('meta_key' => 'wordpress_post_id'), // SET meta_key = 'wordpress_post_id'
+            array('meta_key' => $this->prefix . '_post_id'), // WHERE meta_key = $this->prefix . '_post_id'
+            array('%s'), // (use a string for the SET values)
+            array('%s')  // (use a string for the WHERE values)
+        );
+    }
+
+
     public function authorizeApp () {
         check_admin_referer('wordpress-authorize');
         $this->wpcom->authorize(admin_url('options-general.php?page=' . $this->prefix . '_settings&' . $this->prefix . '_callback'));
@@ -71,6 +89,18 @@ class WP_Crosspost {
     public function completeAuthorization () {
         $tokens = $this->wpcom->completeAuthorization(admin_url('options-general.php?page=' . $this->prefix . '_settings&' . $this->prefix . '_callback'));
         update_option($this->prefix . '_access_token', $tokens['value']);
+    }
+
+    /**
+     * Implements rel-syndication for POSSE as expected by the
+     * Syndication Links plugin for WordPress.
+     *
+     * @see https://wordpress.org/plugins/syndication-links/
+     * @see http://indiewebcamp.com/rel-syndication
+     */
+    public function addSyndicatedLinks ($urls) {
+        $urls[] = $this->getSyndicatedAddress(get_the_id());
+        return $urls;
     }
 
     public function showMissingConfigNotice () {
@@ -223,15 +253,19 @@ END_HTML;
         $screen->set_help_sidebar($screen->get_help_sidebar() . $sidebar);
     }
 
-    public function addWordPressPermalinkRowAction ($actions, $post) {
-        $wpcom_id = get_post_meta($post->ID, 'wordpress_post_id', true);
-        if ($wpcom_id) {
-            $base_hostname = get_post_meta($post->ID, 'wp_crosspost_destination', true);
-            if (empty($base_hostname)) { // fallback to default blog domain
-                $options = get_option($this->prefix . '_settings');
-                $base_hostname = $options['default_hostname'];
-            }
-            $actions['view_on_wordpress'] = '<a href="https://' . $base_hostname . '/?p=' . $wpcom_id . '">' . esc_html__('View post on WordPress.com', 'wp-crosspost') . '</a>';
+    private function getSyndicatedAddress ($post_id) {
+        $url = '';
+        if ($id = get_post_meta($post_id, 'wordpress_post_id', true)) {
+            $base_hostname = $this->getWordPressSiteId($post_id);
+            $url .= "https://{$base_hostname}/?p={$id}";
+        }
+        return $url;
+    }
+
+    public function addPostRowAction ($actions, $post) {
+        $id = get_post_meta($post->ID, 'wordpress_post_id', true);
+        if ($id) {
+            $actions['view_on_wordpress'] = '<a href="' . $this->getSyndicatedAddress($post->ID) . '">' . esc_html__('View post on WordPress.com', 'wp-crosspost') . '</a>';
         }
         return $actions;
     }
@@ -407,7 +441,7 @@ END_HTML;
 
         $prepared_post->params = $common_params;
 
-        $pid = get_post_meta($post_id, $this->prefix . '_post_id', true); // Will be empty if none exists.
+        $pid = get_post_meta($post_id, 'wordpress_post_id', true); // Will be empty if none exists.
         $prepared_post->wpcom_pid = (empty($pid)) ? false : $pid;
 
         return $prepared_post;
@@ -480,11 +514,10 @@ END_HTML;
                 }
                 $this->addAdminNotices($msg);
             } else {
-                update_post_meta($post_id, $this->prefix . '_post_id', $data->ID);
+                update_post_meta($post_id, 'wordpress_post_id', $data->ID);
                 if ($prepared_post->params['status'] === 'publish') {
-                    $url = 'http://' . $this->getWordPressSiteId($post_id) . '/?p=' . get_post_meta($post_id, $this->prefix . '_post_id', true);
                     $this->addAdminNotices(
-                        esc_html__('Post crossposted.', 'wp-crosspost') . ' <a href="' . $url . '">' . esc_html__('View post on WordPress.com', 'wp-crosspost') . '</a>'
+                        esc_html__('Post crossposted.', 'wp-crosspost') . ' <a href="' . $this->getSyndicatedAddress($post_id) . '">' . esc_html__('View post on WordPress.com', 'wp-crosspost') . '</a>'
                     );
                     if ($msg = $this->maybeCaptureDebugOf($data)) { $this->addAdminNotices($msg); }
                 }
@@ -535,6 +568,8 @@ END_HTML;
     }
 
     private function getWordPressSiteId ($post_id) {
+        // TODO: There is some confusion between a "Site ID" and a
+        //       "crosspost destination" that needs to get sorted out. :\
         $d = get_post_meta($post_id, $this->prefix . '_site_id', true);
         if (empty($d)) {
             $options = get_option($this->prefix . '_settings');
@@ -554,7 +589,7 @@ END_HTML;
 
     public function removeFromService ($post_id) {
         $options = get_option($this->prefix . '_settings');
-        $pid = get_post_meta($post_id, $this->prefix . '_post_id', true);
+        $pid = get_post_meta($post_id, 'wordpress_post_id', true);
         $this->crosspostToWordPressDotCom($this->getWordPressSiteId($post_id), array(), $pid, true);
     }
 
@@ -648,7 +683,7 @@ END_HTML;
         if ('publish' === $post->post_status && $wpcom_id) {
 ?>
 <p>
-    <a href="https://<?php print esc_attr($d);?>/?p=<?php print esc_attr($wpcom_id);?>" class="button button-small"><?php esc_html_e('View post on WordPress.com', 'wp-crosspost');?></a>
+    <a href="<?php print esc_attr($this->getSyndicatedAddress($post->ID));?>" class="button button-small"><?php esc_html_e('View post on WordPress.com', 'wp-crosspost');?></a>
 </p>
 <?php
         }
