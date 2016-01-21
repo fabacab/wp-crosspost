@@ -3,8 +3,8 @@ Contributors: meitar
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meitarm%40gmail%2ecom&lc=US&item_name=WP%20Crosspost%20WordPress%20Plugin&item_number=wp%2dcrosspost&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 Tags: WordPress.com, post, crosspost, publishing
 Requires at least: 3.1
-Tested up to: 4.1.1
-Stable tag: 0.3.2
+Tested up to: 4.4.1
+Stable tag: 0.3.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -14,7 +14,7 @@ WordPress Crosspost cross-posts content from your self-hosted WordPress blogs to
 
 WordPress Crosspost posts to your WordPress.com (or [JetPack](http://jetpack.me/)-enabled) blog of your choice whenever you hit the "Publish" (or "Save Draft") button. It can import your reblogs and other posts on WordPress.com. It even downloads the media attachments in your WordPress.com posts and saves them in your self-hosted WordPress Media Library.
 
-**Transform your self-hosted WordPress website into a back-end for your WordPress.com-hosted website. Create original posts on your local computer, but publish them to WordPress.com. Import your WordPress.com reblogs. [Always have a portable copy (a running copy) of your entire WordPress.com blog](http://maymay.net/blog/2014/02/17/keep-a-running-backup-of-your-tumblr-reblogs-with-tumblr-crosspostr/).**
+**Transform your self-hosted WordPress website into a back-end for your WordPress.com-hosted website. Create original posts on your local computer, but publish them to WordPress.com. Import your WordPress.com reblogs. [Always have a portable copy (a running copy) of your entire WordPress.com blog](https://maymay.net/blog/2014/02/17/keep-a-running-backup-of-your-tumblr-reblogs-with-tumblr-crosspostr/).**
 
 This plugin uses [WordPress.com's REST API](http://developer.wordpress.com/docs/api/) to keep posts in sync; when you edit your WordPress post, it updates your crossposted post. Private WordPress posts stay private on the remote site, deleting a post from WordPress that you've previously cross-posted deletes it from the remote site, too, and so on. Scheduling a WordPress post to be published any time in the future will add it to the remote site's future publication schedule, too.
 
@@ -28,7 +28,7 @@ WP-Crosspost transforms your self-hosted WordPress website into a back-end for y
 
 --[Ward Cunningham](https://twitter.com/WardCunningham/status/289875660246220800)
 
-Learn more about how you can use this plugin to own your own data in conjunction with [the "Bring Your Own Content" self-hosted Web publishing virtual appliance](http://maymay.net/blog/2014/03/13/bring-your-own-content-virtual-self-hosting-web-publishing/).
+Learn more about how you can use this plugin to own your own data in conjunction with [the "Bring Your Own Content" self-hosted Web publishing virtual appliance](https://maymay.net/blog/2014/03/13/bring-your-own-content-virtual-self-hosting-web-publishing/).
 
 == Installation ==
 
@@ -44,7 +44,13 @@ See also the [Screenshots](https://wordpress.org/plugins/wp-crosspost/screenshot
 
 = Installation notes and troubleshooting =
 
-WP-Crosspost makes use of Manuel Lemos's `oauth_client_class` for some core functions. Most systems have the required packages installed already, buti f you notice any errors upon plugin activation, first check to ensure your system's [PHP include path](http://php.net/manual/ini.core.php#ini.include-path) is set correctly. The `lib` directory and its required files look like this:
+If you are having trouble installing or using WP-Crosspost, first make sure have the following necessary components installed on your server:
+
+* PHP 5.2.17 or later.
+* [PHP cURL extension](https://secure.php.net/manual/book.curl.php) installed and enabled.
+* [PHP OpenSSL extension](https://secure.php.net/manual/book.openssl.php) installed and enabled.
+
+Moreover, WP-Crosspost makes use of [Manuel Lemos's `oauth_client_class`](http://www.phpclasses.org/package/7700-PHP-Authorize-and-access-APIs-using-OAuth.html) for some core functions. Most systems have the required packages installed already, but if you notice any errors upon plugin activation, first check to ensure your system's [PHP include path](http://php.net/manual/ini.core.php#ini.include-path) is set correctly. The `lib` directory and its required files look like this:
 
     lib
     ├── OAuthWP.php
@@ -96,6 +102,10 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 5. Get help where you need it from WordPress's built-in "Help" system.
 
 == Changelog ==
+
+= Version 0.3.3 =
+
+* Bugfix: Handle several PHP `E_NOTICE` errors in strict environments.
 
 = Version 0.3.2 =
 

@@ -888,7 +888,13 @@ TODO: Why won't an array value work?
             </th>
             <td>
                 <ul id="<?php esc_attr_e($this->prefix);?>_sync_content">
-                    <?php print $this->wordpressBlogsListCheckboxes(array('id' => $this->prefix . '_sync_content', 'name' => $this->prefix . '_settings[sync_content][]'), $options['sync_content']);?>
+                    <?php print $this->wordpressBlogsListCheckboxes(
+                        array(
+                            'id' => $this->prefix . '_sync_content',
+                            'name' => $this->prefix . '_settings[sync_content][]'
+                        ),
+                        (empty($options['sync_content'])) ? false : $options['sync_content']
+                    );?>
                 </ul>
                 <p class="description"><?php esc_html_e('Content you create on the WordPress blogs you select will automatically be copied to this blog.', 'wp-crosspost');?></p>
             </td>
