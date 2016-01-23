@@ -105,9 +105,11 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 
 = Version 0.4 =
 
-* Feature: Cross-post featured images ([Post Thumbnails](https://codex.wordpress.org/Post_Thumbnails)). This works both for uploading and importing.
+* Feature: Cross-post featured images ([Post Thumbnails](https://codex.wordpress.org/Post_Thumbnails)). This works both for uploading and importing. Featured images you add to your local WordPress Media Library will be added to your site's Media Library on WordPress.com.
+* [Feature](https://github.com/meitar/wp-crosspost/issues/4): Automatically convert local audio embeds into remote audio embeds.
 * Bugfix: Prevent duplicate importing of pages and custom post types during sync routines. (Regular posts were already de-duped.)
 * Bugfix: Prevent WP-Cron invocations from duplicating sync schedules.
+* Developer: New filter hook `wp_crosspost_prepared_post` lets other plugin authors customize the data about to be crossposted.
 
 = Version 0.3.3 =
 

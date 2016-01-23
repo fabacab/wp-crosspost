@@ -3,7 +3,7 @@
  * Plugin Name: WordPress Crosspost
  * Plugin URI: https://github.com/meitar/wp-crosspost/#readme
  * Description: Automatically crossposts to your WordPress.com site when you publish a post on your (self-hosted) WordPress blog.
- * Version: 0.3.3
+ * Version: 0.4
  * Author: Meitar Moscovitz
  * Author URI: http://maymay.net/
  * Text Domain: wp-crosspost
@@ -419,6 +419,35 @@ END_HTML;
         }
         $post_body = apply_filters('the_content', $post_body);
 
+        // Detect embedded media and, if new, upload it to WordPress.com.
+        header('Content-Type: text/plain');
+        var_dump($post_body);
+        $new_media = $this->detectEmbeddedMedia($post_body);
+        if (!empty($new_media)) {
+            foreach ($new_media as $v) {
+                if (isset($v['attachment_id'])) {
+                    $new_media_id = $this->exportMedia(
+                        $attachment_id,
+                        $prepared_post->base_hostname,
+                        $v['attributes']
+                    );
+                } else {
+                    switch ($v['element']) {
+                        case 'source':
+                            if ('audio' === $this->getPrimaryMimeType($v['attributes']['type'])) {
+                                // Strip the query string because the WordPress.com service
+                                // does't like those? :\
+                                $parsed = parse_url($v['attributes']['src']);
+                                $url = "{$parsed['scheme']}://{$parsed['host']}{$parsed['path']}";
+                                $p = '!<audio .*?src="' . preg_quote($v['attributes']['src']) . '".*?>.*?<\/audio>!';
+                                $post_body = preg_replace($p, "[audio $url]", $post_body, 1);
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+
         $e = $this->getSettingForPost('use_excerpt', $post_id); // Use excerpt?
         if ($e) {
             $common_params['content'] = $post_excerpt;
@@ -469,33 +498,141 @@ END_HTML;
         if ($feature_id) {
             return $feature_id;
         } else {
-            $params = array(
-                'media[]' => array(
-                    get_attached_file($thumb_id)
-                ),
-                'attrs' => array(array(
-                    'title' => get_post_field('post_title', $thumb_id),
-                    'caption' => get_post_field('post_excerpt', $thumb_id),
-                    'description' => get_post_field('post_content', $thumb_id)
-                ))
-            );
-            $opts = array(
-                'Files' => array('media[]' => array())
-            );
-            $wp_site = get_post_meta($post_id, $this->prefix . '_destination', true);
-            $resp = $this->wpcom->uploadToService($wp_site, $params, $opts);
+            $site = get_post_meta($post_id, $this->prefix . '_destination', true);
+            $resp = $this->exportMedia($thumb_id, $site, array(
+                'title' => get_post_field('post_title', $thumb_id),
+                'caption' => get_post_field('post_excerpt', $thumb_id),
+                'description' => get_post_field('post_content', $thumb_id)
+            ));
             if (empty($resp) || !empty($resp->error)) {
                 error_log(print_r($resp, true));
                 return '';
             } else {
                 $feature_id = $resp->media[0]->ID;
                 update_post_meta($thumb_id, 'wordpress_post_id', $feature_id);
-                update_post_meta($thumb_id, $this->prefix . '_destination', $wp_site);
+                update_post_meta($thumb_id, $this->prefix . '_destination', $site);
                 return $feature_id;
             }
         }
     }
 
+    /**
+     * Gets the primary type of a mime type string.
+     *
+     * @link https://en.wikipedia.org/wiki/MIME#Content-Type
+     *
+     * @param string $mime_type
+     *
+     * @return string
+     */
+    private function getPrimaryMimeType ($mime_type) {
+        return substr($mime_type, 0, strpos($mime_type, '/'));
+    }
+
+    /**
+     * Gets a list of objects representing media embedded in the content.
+     *
+     * @param string $html_content
+     *
+     * @uses wp_allowed_protocols()
+     * @uses wp_kses_hair()
+     *
+     * @return array
+     */
+    private function detectEmbeddedMedia ($html_content) {
+        $detected_media = array();
+
+        $els = array(
+            'a',      // links
+            'img',    // images
+            'source', // HTML5 embeds
+            // TODO: Do we need to actually detect these?
+            //'audio',
+            //'video',
+            //'picture'
+        );
+        $pattern = '/<(' . implode('|', $els) . ') (.+?)>/';
+        $matches = array();
+        if (preg_match_all($pattern, $html_content, $matches)) {
+            for ($i = 0; $i < count($matches[1]); $i++) {
+                $detected_media[$i] = array(
+                    'element' => $matches[1][$i],
+                    'attributes' => array()
+                );
+            }
+            for ($i = 0; $i < count($matches[2]); $i++) {
+                foreach (wp_kses_hair($matches[2][$i], wp_allowed_protocols()) as $attr) {
+                    $detected_media[$i]['attributes'][$attr['name']] = $attr['value'];
+                }
+            }
+        }
+
+        for ($i = 0; $i < count($detected_media); $i++) {
+            switch ($detected_media[$i]['element']) {
+                case 'img':
+                    $p = '/\bwp-image-(\d+)\b/';
+                    if ($matches = preg_grep($p, $detected_media[$i]['attributes']['class'])) {
+                        preg_match($p, array_pop($matches), $m);
+                        $detected_media[$i]['attachment_id'] = $m[1];
+                    }
+                    break;
+            }
+        }
+
+        return $detected_media;
+    }
+
+    /**
+     * Exports copy of the detected media attachment to WordPress.com.
+     *
+     * @link https://developer.wordpress.com/docs/api/1.1/post/sites/%24site/media/new/
+     *
+     * @param int $attachment_id
+     * @param string $site
+     * @param array $attrs
+     *
+     * @return stdClass API response from WordPress.
+     */
+    private function exportMedia ($attachment_id, $site, $attrs = array()) {
+        $default_attrs = array(
+            'title' => '',
+            'description' => '',
+            'caption' => '',
+            'alt' => '',
+            'artist' => '',
+            'album' => '',
+            'parent_id' => 0
+
+        );
+        $attrs = shortcode_atts($default_attrs, $attrs);
+
+        $post = get_post($attachment_id);
+
+        if ($post->wordpress_post_id) {
+            return $post->wordpress_post_id;
+        } else {
+            $params = array(
+                'media[]' => array(
+                    get_attached_file($attachment_id)
+                ),
+                'attrs' => array($attrs)
+            );
+            $opts = array(
+                'Files' => array('media[]' => array())
+            );
+            return $this->wpcom->uploadToService($site, $params, $opts);
+        }
+    }
+
+    /**
+     * Creates or updates a post on the remote service whenever a post is saved.
+     *
+     * @link https://developer.wordpress.org/reference/hooks/save_post/
+     *
+     * @param int $post_id
+     *
+     * @return void
+     */
     public function savePost ($post_id) {
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) { return; }
         if (!isset($_POST[$this->prefix . '_meta_box_nonce']) || !wp_verify_nonce($_POST[$this->prefix . '_meta_box_nonce'], 'editing_' . $this->prefix)) {
@@ -526,6 +663,11 @@ END_HTML;
             } else {
                 $prepared_post->params['publicize'] = false;
             }
+
+            $prepared_post = apply_filters($this->prefix . '_prepared_post', $prepared_post);
+            // We still have a post, right? in case someone forgets to return
+            if (empty($prepared_post)) { return; }
+
             $data = $this->crosspostToWordPressDotCom($prepared_post->base_hostname, $prepared_post->params, $prepared_post->wpcom_pid);
             if (empty($data->ID)) {
                 $msg = esc_html__('Crossposting to WordPress.com failed.', 'wp-crosspost');
