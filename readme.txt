@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meita
 Tags: WordPress.com, post, crosspost, publishing
 Requires at least: 3.1
 Tested up to: 4.4.1
-Stable tag: 0.3.3
+Stable tag: 0.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -102,6 +102,12 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 5. Get help where you need it from WordPress's built-in "Help" system.
 
 == Changelog ==
+
+= Version 0.4 =
+
+* Feature: Cross-post featured images ([Post Thumbnails](https://codex.wordpress.org/Post_Thumbnails)). This works both for uploading and importing.
+* Bugfix: Prevent duplicate importing of pages and custom post types during sync routines. (Regular posts were already de-duped.)
+* Bugfix: Prevent WP-Cron invocations from duplicating sync schedules.
 
 = Version 0.3.3 =
 

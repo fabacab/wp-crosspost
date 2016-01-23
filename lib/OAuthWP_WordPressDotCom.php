@@ -15,7 +15,7 @@ class OAuthWP_WordPressDotCom extends OAuthWP {
 
     // Override so clients can ignore the API base url.
     public function CallAPI ($url, $method, $params, $opts, &$resp) {
-        return parent::CallAPI('https://public-api.wordpress.com/rest/v1' . $url, $method, $params, $opts, $resp);
+        return parent::CallAPI('https://public-api.wordpress.com/rest/v1.1' . $url, $method, $params, $opts, $resp);
     }
 }
 

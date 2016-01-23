@@ -388,11 +388,11 @@ END_HTML;
             'slug' => get_post_field('post_name', $post_id),
             'comments_open' => comments_open($post_id),
             'pings_open' => pings_open($post_id),
-            'sticky' => is_sticky($post_id)
+            'sticky' => is_sticky($post_id),
             // 'publicize' is handled directly in savePost()
-            // TODO: 'featured_image'
+            'featured_image' => $this->getFeaturedImage($post_id),
             // TODO: 'media' => 
-            // TODO: 'metadata' => 
+            // TODO: 'metadata' => $metadata
             // TODO: 'sharing_enabled' =>
         );
 
@@ -445,6 +445,55 @@ END_HTML;
         $prepared_post->wpcom_pid = (empty($pid)) ? false : $pid;
 
         return $prepared_post;
+    }
+
+    /**
+     * Retrieves the remote post ID of a featured image.
+     *
+     * If the local WordPress post has a featured image attached, but
+     * is not associated with an image hosted remotely, a copy of the
+     * local file will be made on the remote service.
+     *
+     * @param int $post_id
+     *
+     * @return string|int
+     */
+    private function getFeaturedImage ($post_id) {
+        $thumb_id = get_post_thumbnail_id($post_id);
+
+        if (!$thumb_id) {
+            return '';
+        }
+
+        $feature_id = get_post_meta($thumb_id, 'wordpress_post_id', true);
+        if ($feature_id) {
+            return $feature_id;
+        } else {
+            $params = array(
+                'media[]' => array(
+                    get_attached_file($thumb_id)
+                ),
+                'attrs' => array(array(
+                    'title' => get_post_field('post_title', $thumb_id),
+                    'caption' => get_post_field('post_excerpt', $thumb_id),
+                    'description' => get_post_field('post_content', $thumb_id)
+                ))
+            );
+            $opts = array(
+                'Files' => array('media[]' => array())
+            );
+            $wp_site = get_post_meta($post_id, $this->prefix . '_destination', true);
+            $resp = $this->wpcom->uploadToService($wp_site, $params, $opts);
+            if (empty($resp) || !empty($resp->error)) {
+                error_log(print_r($resp, true));
+                return '';
+            } else {
+                $feature_id = $resp->media[0]->ID;
+                update_post_meta($thumb_id, 'wordpress_post_id', $feature_id);
+                update_post_meta($thumb_id, $this->prefix . '_destination', $wp_site);
+                return $feature_id;
+            }
+        }
     }
 
     public function savePost ($post_id) {
@@ -677,7 +726,7 @@ END_HTML;
         // Set default crossposting options for this post.
         $x = get_post_meta($post->ID, $this->prefix . '_crosspost', true);
         $d = $this->getWordPressSiteId($post->ID);
-        $e = intVal($this->getSettingForPost('use_excerpt', $post->ID));
+        $e = intval($this->getSettingForPost('use_excerpt', $post->ID));
 
         $wpcom_id = get_post_meta($post->ID, 'wordpress_post_id', true);
         if ('publish' === $post->post_status && $wpcom_id) {
@@ -705,8 +754,10 @@ END_HTML;
             <?php print $this->wordpressBlogsSelectField(array('name' => $this->prefix . '_destination'), $d);?>
         </label></p>
         <p><label>
-            <input type="checkbox" name="<?php esc_attr_e($this->prefix);?>_use_excerpt" value="1"
-                <?php if (1 === $e) { print 'checked="checked"'; } ?>
+            <input type="checkbox"
+                name="<?php print esc_attr($this->prefix);?>_use_excerpt"
+                value="1"
+                <?php checked($e);?>
                 title="<?php esc_html_e('Uncheck to send post content as crosspost content.', 'wp-crosspost');?>"
                 />
             <?php esc_html_e('Send excerpt instead of main content?', 'wp-crosspost');?>
@@ -720,8 +771,10 @@ END_HTML;
         <summary><?php esc_html_e('Publicize to my accounts on', 'wp-crosspost');?></summary>
         <ul>
             <li><label>
-                <input type="checkbox" name="<?php esc_attr_e($this->prefix);?>_publicize[]" value="1"
-                    <?php if (!empty($options['auto_publicize'])) { ?>checked="checked"<?php } ?>
+                <input type="checkbox"
+                    name="<?php print esc_attr($this->prefix);?>_publicize[]"
+                    value="1"
+                    <?php checked(!empty($options['auto_publicize']));?>
                     title="<?php esc_html_e('Uncheck to disable the auto-post.', 'wp-crosspost');?>"
                     />
                 <?php esc_html_e('all connected social networks', 'wp-crosspost');?>
@@ -935,7 +988,7 @@ TODO: Why won't an array value work?
                 <label for="<?php esc_attr_e($this->prefix);?>_additional_markup"><?php esc_html_e('Add the following markup to each crossposted entry:', 'wp-crosspost');?></label>
             </th>
             <td>
-                <textarea
+                <textarea class="large-text code"
                     id="<?php esc_attr_e($this->prefix);?>_additional_markup"
                     name="<?php esc_attr_e($this->prefix);?>_settings[additional_markup]"
                     placeholder="<?php esc_attr_e('Anything you type in this box will be added to every crosspost.', 'wp-crosspost');?>"><?php
@@ -973,7 +1026,11 @@ TODO: Why won't an array value work?
                 </label>
             </th>
             <td>
-                <input id="<?php esc_attr_e($this->prefix);?>_additional_tags" value="<?php if (isset($options['additional_tags'])) : print esc_attr(implode(', ', $options['additional_tags'])); endif;?>" name="<?php esc_attr_e($this->prefix);?>_settings[additional_tags]" placeholder="<?php esc_attr_e('crosspost, magic', 'wp-crosspost');?>" />
+                <input class="regular-text"
+                    id="<?php esc_attr_e($this->prefix);?>_additional_tags"
+                    value="<?php if (isset($options['additional_tags'])) : print esc_attr(implode(', ', $options['additional_tags'])); endif;?>"
+                    name="<?php esc_attr_e($this->prefix);?>_settings[additional_tags]" placeholder="<?php esc_attr_e('crosspost, magic', 'wp-crosspost');?>"
+                />
                 <p class="description"><?php print sprintf(esc_html__('Comma-separated list of additional tags that will be added to every crosspost. Useful if only some posts on your other blog are cross-posted and you want to know which of those posts were generated by this plugin. (These tags will always be applied regardless of the value of the "%s" option.)', 'wp-crosspost'), esc_html__('Do not send post tags in crossposts', 'wp-crosspost'));?></p>
             </td>
         </tr>
@@ -984,8 +1041,13 @@ TODO: Why won't an array value work?
                 </label>
             </th>
             <td>
-                <input type="checkbox" <?php if (isset($options['auto_publicize'])) : print 'checked="checked"'; endif; ?> value="1" id="<?php esc_attr_e($this->prefix);?>_auto_publicize" name="<?php esc_attr_e($this->prefix);?>_settings[auto_publicize]" />
-                <label for="<?php esc_attr_e($this->prefix);?>_auto_publicize"><span class="description"><?php print sprintf(esc_html__('When checked, new posts you create on WordPress will have their "%s" option enabled by default. You can always override this when editing an individual post.', 'wp-crosspost'), esc_html__('Publicize to my accounts on', 'wp-crosspost'));?></span></label>
+                <input type="checkbox"
+                    id="<?php print esc_attr($this->prefix);?>_auto_publicize"
+                    name="<?php esc_attr_e($this->prefix);?>_settings[auto_publicize]"
+                    <?php checked(!empty($options['auto_publicize']))?>
+                    value="1"
+                />
+                <label for="<?php print esc_attr($this->prefix);?>_auto_publicize"><span class="description"><?php print sprintf(esc_html__('When checked, new posts you create on WordPress will have their "%s" option enabled by default. You can always override this when editing an individual post.', 'wp-crosspost'), esc_html__('Publicize to my accounts on', 'wp-crosspost'));?></span></label>
             </td>
         </tr>
         <tr>
@@ -1081,8 +1143,9 @@ TODO: Why won't an array value work?
 
     public function setSyncSchedules () {
         if (!$this->isConnectedToService()) { return; }
-        $options = get_option($this->prefix . '_settings');
-        $blogs_to_sync = (empty($options['sync_content'])) ? array() : $options['sync_content'];
+        if (defined('DOING_CRON') && DOING_CRON) { return; }
+
+        $blogs_to_sync = $this->getBlogsToSync();
         // If we are being asked to sync, set up a daily schedule for that.
         if (!empty($blogs_to_sync)) {
             foreach ($blogs_to_sync as $x) {
@@ -1118,6 +1181,9 @@ TODO: Why won't an array value work?
 
     public function syncFromWordPressBlog ($base_hostname) {
         $options = get_option($this->prefix . '_settings');
+        if (!empty($options['debug'])) {
+            error_log(sprintf(esc_html__('Entering WordPress.com Sync routine for %s', 'wp-crosspost'), $base_hostname));
+        }
         if (!isset($options['last_synced_ids'])) {
             $options['last_synced_ids'] = array();
         }
@@ -1128,16 +1194,10 @@ TODO: Why won't an array value work?
         $ids_synced = array(0); // Init with 0
         $offset = 0;
         $limit = 100;
-        $num_posts_to_get = 0;
-        // If we never synced, trawl through entire archive.
-        if (0 === $latest_synced_id) {
-            $info = $this->wpcom->getTokenSiteInfo($base_hostname);
-            $num_posts_to_get = $info->post_count; // get all of them
-        } else {
-            $num_posts_to_get = $limit * 2; // Just get the last 2 batches.
-        }
-        $i = 0;
-        while ($i < $num_posts_to_get) {
+        // This loop either:
+        // * Trawls through the entire blog (if $latest_synced_id is 0), or
+        // * only tries to sync the latest two batches of posts
+        do {
             $params = array(
                 'context' => 'edit', // Don't parse shortcodes, etc.
                 'offset' => $offset,
@@ -1148,33 +1208,60 @@ TODO: Why won't an array value work?
                 'order_by' => 'date'
             );
             $resp = $this->wpcom->getPosts($base_hostname, $params);
-            // If there aren't as many posts as we're trying to get,
-            if ($resp->found <= $num_posts_to_get) {
-                // reset the loop condition so we only try getting
-                // as many posts that actually exist.
-                $num_posts_to_get = $resp->found;
-            }
             $posts = $resp->posts;
             foreach (array_reverse($posts) as $post) { // "older" posts first
                 $preexisting_posts = get_posts(array(
                     'meta_key' => 'wordpress_post_id',
-                    'meta_value' => $post->ID
+                    'meta_value' => $post->ID,
+                    'post_status' => 'any',
+                    'post_type' => 'any'
                 ));
-                if (empty($preexisting_posts)) {
+                if (!empty($options['debug'])) {
+                    error_log(sprintf(
+                        _n('Found %s preexisting post for WordPress ID', 'Found %s preexisting posts for WordPress ID', count($preexisting_posts), 'wp-crosspost') . ' %s (%s)',
+                        count($preexisting_posts),
+                        $post->ID,
+                        implode(',', $preexisting_posts)
+                    ));
+                }
+                if (in_array($post->ID, $ids_synced)) {
+                    error_log("Haven't we already sync'ed this WordPress post? {$post->ID}");
+                } else if (empty($preexisting_posts)) {
                     if ($this->importPostFromWordPress($post)) {
                         $ids_synced[] = $post->ID;
                     }
                 }
-                $i++; // in foreach cuz we're counting posts
             }
-            $offset = $offset + $limit; // Set up next fetch.
-        }
+            $offset = ($limit + $offset);
+            if (0 !== $latest_synced_id && $offset >= $limit * 2) {
+                if (!empty($options['debug'])) {
+                    error_log(esc_html__('Previously synced, stopping.', 'wp-crosspost'));
+                }
+                break;
+            }
+        } while (!empty($posts));
 
         // Record the latest post ID to be sync'ed on the blog.
         $options['last_synced_ids'][$base_hostname] = ($latest_synced_id > max($ids_synced))
             ? $latest_synced_id
             : max($ids_synced);
         update_option($this->prefix . '_settings', $options);
+    }
+
+    /**
+     * Makes a CSV-formatted string from the members of some "Tag" object.
+     *
+     * @param object $obj
+     * @param string $key The object's property key to look for the value in.
+     *
+     * @return string
+     */
+    private function tagObj2csv ($obj, $key = 'name') {
+        $str = '';
+        foreach ($obj as $k => $v) {
+            $str .= "$k,";
+        }
+        return substr($str, 0, -1);
     }
 
     /**
@@ -1217,7 +1304,7 @@ TODO: Why won't an array value work?
         $wp_post['post_date_gmt'] = gmdate('Y-m-d H:i:s', strtotime($post->date));
         $wp_post['comment_status'] = ($post->comments_open) ? 'open' : 'closed';
         $wp_post['ping_status'] = ($post->pings_open) ? 'open' : 'closed';
-        $wp_post['tags_input'] = $post->tags;
+        $wp_post['tags_input'] = $this->tagObj2csv($post->tags);
         $wp_post['post_category'] = $this->correlateCategories($post->categories);
 
         $wp_id = wp_insert_post($wp_post);
@@ -1250,47 +1337,124 @@ TODO: Why won't an array value work?
                     error_log($msg);
                 } else {
                     foreach ($post->attachments as $attachment) {
-                        $data = wp_remote_get($attachment->URL);
-                        if (200 != $data['response']['code']) {
-                            $msg = sprintf(
-                                esc_html__('Failed to get attachment (%1$s) from post (%2$s). Server responded: %3$s', 'wp-crosspost'),
-                                $attachment->URL,
-                                $post->URL,
-                                print_r($data, true)
-                            );
-                            error_log($msg);
-                        } else {
-                            $f = wp_upload_bits(basename($attachment->URL), null, $data['body'], $wp_subdir_from_post_timestamp);
-                            if ($f['error']) {
-                                $msg = sprintf(
-                                    esc_html__('Error saving file (%s): ', 'wp-crosspost'),
-                                    basename($attachment->URL)
-                                );
-                                error_log($msg);
-                            } else {
-                                $wp_filetype = wp_check_filetype(basename($f['file']));
-                                $wp_file_id = wp_insert_attachment(array(
-                                    'post_title' => basename($f['file'], ".{$wp_filetype['ext']}"),
-                                    'post_content' => '', // Always empty string.
-                                    'post_status' => 'inherit',
-                                    'post_mime_type' => $wp_filetype['type'],
-                                    'guid' => $wp_upload_dir['url'] . '/' . basename($f['file'])
-                                ), $f['file'], $wp_id);
-                                require_once(ABSPATH . 'wp-admin/includes/image.php');
-                                $metadata = wp_generate_attachment_metadata($wp_file_id, $f['file']);
-                                wp_update_attachment_metadata($wp_file_id, $metadata);
-                                $new_content = str_replace($attachment->URL, $f['url'], get_post_field('post_content', $wp_id));
-                                wp_update_post(array(
-                                    'ID' => $wp_id,
-                                    'post_content' => $new_content
-                                ));
-                            }
-                        }
+                        $attachment_id = $this->importMediaFromUrl($attachment->URL, array(
+                            'post_parent' => $wp_id
+                        ));
+                        $new_content = str_replace(
+                            $attachment->URL,
+                            wp_get_attachment_url($attachment_id),
+                            get_post_field('post_content', $wp_id)
+                        );
+                        wp_update_post(array(
+                            'ID' => $wp_id,
+                            'post_content' => $new_content
+                        ));
                     }
                 }
             }
+
+            // Import featured images
+            if ($post->post_thumbnail) {
+                $media = $this->wpcom->getMediaByID(parse_url($post->URL, PHP_URL_HOST), $post->post_thumbnail->ID);
+                $preexisting_media = get_posts(array(
+                    'post_type' => 'attachment',
+                    'post_status' => 'any',
+                    'meta_query' => array(
+                        array(
+                            'key' => 'wordpress_post_id',
+                            'value' => $media->id
+                        ),
+                        array(
+                            'key' => $this->prefix . '_destination',
+                            'value' => parse_url($post->URL, PHP_URL_HOST)
+                        )
+                    )
+                ));
+                if (empty($preexisting_media)) {
+                    $attachment_id = $this->importMediaFromUrl($post->post_thumbnail->URL);
+                    update_post_meta($attachment_id, 'wordpress_post_id', $media->id);
+                    update_post_meta($attachment_id, $this->prefix . '_destination', parse_url($post->URL, PHP_URL_HOST));
+                } else {
+                    $attachment_id = $preexisting_media[0]->ID;
+                }
+                set_post_thumbnail($wp_id, $attachment_id);
+            }
         }
         return $wp_id;
+    }
+
+    /**
+     * Downloads and adds an attachment to the Media Library.
+     *
+     * @param string $url
+     * @param array $args
+     *
+     * @uses wp_parse_args()
+     * @uses wp_upload_dir()
+     * @uses wp_remote_get()
+     * @uses wp_upload_bits()
+     * @uses wp_check_filetype()
+     * @uses wp_insert_attachment()
+     * @uses wp_generate_attachment_metadata()
+     * @uses wp_update_attachment_metadata()
+     *
+     * @return int|WP_Error The attachment post's ID.
+     */
+    private function importMediaFromUrl ($url, $args = array()) {
+        $defaults = array(
+            'date' => date('c', time()),
+            'post_parent' => 0
+        );
+        $args = wp_parse_args($args, $defaults);
+
+        $wp_subdir_from_timestamp = date('Y/m', strtotime($args['date']));
+        $wp_upload_dir = wp_upload_dir($wp_subdir_from_timestamp);
+
+        if (!is_writable($wp_upload_dir['path'])) {
+            return new WP_Error(
+                '',
+                sprintf(
+                    esc_html__('Your WordPress uploads directory (%s) is not writable.',
+                    $wp_upload_dir['path'])
+                ),
+                $wp_upload_dir
+            );
+        }
+
+        $data = wp_remote_get($url);
+        if (200 != $data['response']['code']) {
+            $msg = sprintf(
+                esc_html__('Failed to download media at %1$s. Server responded: %2$s', 'wp-crosspost'),
+                $url,
+                print_r($data, true)
+            );
+            error_log($msg);
+            return new WP_Error($data['response']['code'], $msg, $data);
+        } else {
+            $f = wp_upload_bits(basename($url), null, $data['body'], $wp_subdir_from_timestamp);
+            if ($f['error']) {
+                $msg = sprintf(
+                    esc_html__('Error saving file (%s): ', 'wp-crosspost'),
+                    basename($attachment->URL)
+                );
+                error_log($msg);
+                return new WP_Error('', $f['error'], $f);
+            } else {
+                $wp_filetype = wp_check_filetype(basename($f['file']));
+                $wp_file_id = wp_insert_attachment(array(
+                    'post_title' => basename($f['file'], ".{$wp_filetype['ext']}"),
+                    'post_content' => '', // Always empty string.
+                    'post_status' => 'inherit',
+                    'post_parent' => $args['post_parent'],
+                    'post_mime_type' => $wp_filetype['type'],
+                    'guid' => $wp_upload_dir['url'] . '/' . basename($f['file'])
+                ), $f['file']);
+                require_once(ABSPATH . 'wp-admin/includes/image.php');
+                $metadata = wp_generate_attachment_metadata($wp_file_id, $f['file']);
+                wp_update_attachment_metadata($wp_file_id, $metadata);
+                return $wp_file_id;
+            }
+        }
     }
 
     private function getWordPressAppRegistrationUrl () {
