@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meita
 Tags: WordPress.com, post, crosspost, publishing
 Requires at least: 3.1
 Tested up to: 4.4.1
-Stable tag: 0.4
+Stable tag: 0.4.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -12,11 +12,11 @@ WordPress Crosspost cross-posts content from your self-hosted WordPress blogs to
 
 == Description ==
 
-WordPress Crosspost posts to your WordPress.com (or [JetPack](http://jetpack.me/)-enabled) blog of your choice whenever you hit the "Publish" (or "Save Draft") button. It can import your reblogs and other posts on WordPress.com. It even downloads the media attachments in your WordPress.com posts and saves them in your self-hosted WordPress Media Library.
+WordPress Crosspost posts to your WordPress.com (or self-hosted [JetPack](http://jetpack.me/)-enabled) blog of your choice whenever you hit the "Publish" (or "Save Draft") button. It can import your reblogs and other posts on WordPress.com. It even downloads the media attachments in your WordPress.com posts and saves them in your self-hosted WordPress Media Library.
 
 **Transform your self-hosted WordPress website into a back-end for your WordPress.com-hosted website. Create original posts on your local computer, but publish them to WordPress.com. Import your WordPress.com reblogs. [Always have a portable copy (a running copy) of your entire WordPress.com blog](https://maymay.net/blog/2014/02/17/keep-a-running-backup-of-your-tumblr-reblogs-with-tumblr-crosspostr/).**
 
-This plugin uses [WordPress.com's REST API](http://developer.wordpress.com/docs/api/) to keep posts in sync; when you edit your WordPress post, it updates your crossposted post. Private WordPress posts stay private on the remote site, deleting a post from WordPress that you've previously cross-posted deletes it from the remote site, too, and so on. Scheduling a WordPress post to be published any time in the future will add it to the remote site's future publication schedule, too.
+This plugin uses [WordPress.com's REST API](http://developer.wordpress.com/docs/api/) to keep posts in sync; when you edit your WordPress post, it updates your crossposted post. Private WordPress posts stay private on the remote site, deleting a post from WordPress that you've previously cross-posted deletes it from the remote site, too, and so on. Scheduling a WordPress post to be published any time in the future will add it to the remote site's future publication schedule, too. See the [Other Notes](https://wordpress.org/plugins/wp-crosspost/other_notes/) page for a complete listing of features.
 
 WP-Crosspost is very lightweight. It just requires you to connect to your WordPress.com account from the plugin options screen. After that, you're ready to cross-post!
 
@@ -103,6 +103,10 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 
 == Changelog ==
 
+= Version 0.4.1 =
+
+* Feature: Support cross-posting image attachments in posts. (This is in addition to a post's "featured image.")
+
 = Version 0.4 =
 
 * Feature: Cross-post featured images ([Post Thumbnails](https://codex.wordpress.org/Post_Thumbnails)). This works both for uploading and importing. Featured images you add to your local WordPress Media Library will be added to your site's Media Library on WordPress.com.
@@ -161,3 +165,47 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 Maintaining this plugin is a labor of love. However, if you like it, please consider [making a donation](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meitarm%40gmail%2ecom&lc=US&item_name=Tumblr%20Crosspostr%20WordPress%20Plugin&item_number=tumblr%2dcrosspostr&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) for your use of the plugin, [purchasing one of Meitar's web development books](http://www.amazon.com/gp/redirect.html?ie=UTF8&location=http%3A%2F%2Fwww.amazon.com%2Fs%3Fie%3DUTF8%26redirect%3Dtrue%26sort%3Drelevancerank%26search-type%3Dss%26index%3Dbooks%26ref%3Dntt%255Fathr%255Fdp%255Fsr%255F2%26field-author%3DMeitar%2520Moscovitz&tag=maymaydotnet-20&linkCode=ur2&camp=1789&creative=390957) or, better yet, contributing directly to [Meitar's Cyberbusking fund](http://Cyberbusking.org/). (Publishing royalties ain't exactly the lucrative income it used to be, y'know?) Your support is appreciated!
 
 This plugin is inspired by and based on [Tumblr Crosspostr](https://wordpress.org/plugins/tumblr-crosspostr/).
+
+**Full feature list**
+
+WP-Crosspost turns your self-hosted WordPress blog into the back-end of one of your WordPress.com sites. Crossposting between self-hosted WordPress blogs is *theoretically* supported (but untested) if you have [JetPack](https://jetpack.me) installed and enabled on the remote self-hosted WordPress blog.
+
+You can crosspost (push):
+
+* Posts (of [*any* type](https://codex.wordpress.org/Post_Types), including [Pages](https://codex.wordpress.org/Pages) and custom post types). Pushed data includes the post's:
+    * date
+    * title
+    * status and visibility settings (including the [post password](https://codex.wordpress.org/Using_Password_Protection) if set and whether or not the post is currently in the trash)
+    * format
+    * tags
+    * categories
+    * slug
+    * whether comments are on or off
+    * whether [pingbacks](https://codex.wordpress.org/Glossary#Pingback) are on or off
+    * whether the post is [sticky](https://codex.wordpress.org/Sticky_Posts)
+    * featured image,
+    * content
+    * [excerpt](https://codex.wordpress.org/Excerpt),
+    * image attachments, along with the actual image media file itself
+
+Some notes on crossposting (push-posting):
+
+* If you update a post on the remote site (such as on WordPress.com), the change will not be pulled back automatically, so always prefer to use your self-hosted WordPress blog to make changes.
+* When you upload a file to your Media Library, it will not be crossposted to the remote site's Media Library until and unless you attach it to a post and save the post.
+* The URLs of images and other media files will be automatically rewritten to reference the remote site's copy, so always use *local* URLs in your posts. (Let the plugin handle media URLs itself.)
+
+When sync'ing is enabled, you will import (pull):
+
+* Posts (of any type, including pages and custom post types), including the post's:
+    * date
+    * title
+    * content
+    * excerpt
+    * status and visibility settings (including the [post password](https://codex.wordpress.org/Using_Password_Protection) if set and whether or not the post is currently in the trash),
+    * whether comments are on or off
+    * whether [pingbacks](https://codex.wordpress.org/Glossary#Pingback) are on or off
+    * [geolocation](https://support.wordpress.com/geotagging/)
+    * featured images
+    * media attachments, along with the actual media file itself
+
+Wondering if WP-Crosspost can do something you don't see on this list? Ask about or search for it in the [WP-Crosspost plugin support forum](https://wordpress.org/support/plugin/wp-crosspost)! Also, I'm just one guy working on this whenever I get the time to, so I prioritize the most often requested features. If your feature isn't high on my list, please be patient or, better yet, [donate to support my work on this plugin](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meitarm%40gmail%2ecom&lc=US&item_name=WP%20Crosspost%20WordPress%20Plugin&item_number=wp%2dcrosspost&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) so that I have more time to devote to this work. Thanks! :)

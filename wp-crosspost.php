@@ -3,9 +3,9 @@
  * Plugin Name: WordPress Crosspost
  * Plugin URI: https://github.com/meitar/wp-crosspost/#readme
  * Description: Automatically crossposts to your WordPress.com site when you publish a post on your (self-hosted) WordPress blog.
- * Version: 0.4
+ * Version: 0.4.1
  * Author: Meitar Moscovitz
- * Author URI: http://maymay.net/
+ * Author URI: https://maymay.net/
  * Text Domain: wp-crosspost
  * Domain Path: /languages
  */
@@ -420,31 +420,45 @@ END_HTML;
         $post_body = apply_filters('the_content', $post_body);
 
         // Detect embedded media and, if new, upload it to WordPress.com.
-        header('Content-Type: text/plain');
-        var_dump($post_body);
-        $new_media = $this->detectEmbeddedMedia($post_body);
-        if (!empty($new_media)) {
-            foreach ($new_media as $v) {
-                if (isset($v['attachment_id'])) {
-                    $new_media_id = $this->exportMedia(
-                        $attachment_id,
-                        $prepared_post->base_hostname,
-                        $v['attributes']
-                    );
-                } else {
-                    switch ($v['element']) {
-                        case 'source':
-                            if ('audio' === $this->getPrimaryMimeType($v['attributes']['type'])) {
-                                // Strip the query string because the WordPress.com service
-                                // does't like those? :\
-                                $parsed = parse_url($v['attributes']['src']);
-                                $url = "{$parsed['scheme']}://{$parsed['host']}{$parsed['path']}";
-                                $p = '!<audio .*?src="' . preg_quote($v['attributes']['src']) . '".*?>.*?<\/audio>!';
-                                $post_body = preg_replace($p, "[audio $url]", $post_body, 1);
-                            }
-                            break;
+        $detected_media = $this->detectEmbeddedMedia($post_body);
+
+        $new_media = array_filter($detected_media, array($this, 'missingRemotePostID'));
+        foreach ($new_media as $v) {
+            if (isset($v['attachment_id'])) {
+                $this->exportMedia(
+                    $v['attachment_id'],
+                    $prepared_post->base_hostname,
+                    $v['attributes']
+                );
+            }
+        }
+
+        // Rewrite embedded content to point at remote media instead.
+        foreach ($detected_media as $v) {
+            switch ($v['element']) {
+                case 'source': // handle <source> HTML elements
+                    if ('audio' === $this->getPrimaryMimeType($v['attributes']['type'])) {
+                        // Strip the query string because the WordPress.com service
+                        // does't like those? :\
+                        $parsed = parse_url($v['attributes']['src']);
+                        $url = "{$parsed['scheme']}://{$parsed['host']}{$parsed['path']}";
+                        $p = '!<audio .*?src="' . preg_quote($v['attributes']['src']) . '".*?>.*?<\/audio>!';
+                        $post_body = preg_replace($p, "[audio $url]", $post_body, 1);
                     }
-                }
+                    break;
+                default: // all other detected media elements
+                    foreach ($v['attributes'] as $attr => $val) {
+                        switch ($attr) {
+                            case 'href':
+                            case 'src':
+                                if ($this->isLocalContent($val)) {
+                                    $remote_url = $this->getRemoteMediaUrl($val, $prepared_post->base_hostname);
+                                    $post_body = str_replace($val, $remote_url, $post_body);
+                                }
+                                break;
+                        }
+                    }
+                    break;
             }
         }
 
@@ -508,12 +522,33 @@ END_HTML;
                 error_log(print_r($resp, true));
                 return '';
             } else {
-                $feature_id = $resp->media[0]->ID;
-                update_post_meta($thumb_id, 'wordpress_post_id', $feature_id);
-                update_post_meta($thumb_id, $this->prefix . '_destination', $site);
-                return $feature_id;
+                return $resp->media[0]->ID;
             }
         }
+    }
+
+    /**
+     * Converts a local content URL to a remote content URL.
+     *
+     * @param string $local_url
+     * @param string $site
+     *
+     * @return string
+     */
+    private function getRemoteMediaUrl ($local_url, $site) {
+        $attachment_id = $this->findAttachmentId(false, $local_url);
+        if ($attachment_id) {
+            $remote_info = get_post_meta($attachment_id, $this->prefix . "_{$site}_fields", true);
+            if ($remote_info && isset($remote_info->URL)) {
+                return $remote_info->URL;
+            }
+        }
+        // Build a remote URL ourselves.
+        // TODO: Need to find a way to do this without assuming wordpress.com hosts
+        $wp_upload_dir = wp_upload_dir();
+        $site_id = substr($site, 0, strpos($site, '.'));
+        $remote_base = "https://{$site_id}.files.wordpress.com";
+        return str_replace($wp_upload_dir['baseurl'], $remote_base, $local_url);
     }
 
     /**
@@ -571,15 +606,97 @@ END_HTML;
             switch ($detected_media[$i]['element']) {
                 case 'img':
                     $p = '/\bwp-image-(\d+)\b/';
-                    if ($matches = preg_grep($p, $detected_media[$i]['attributes']['class'])) {
-                        preg_match($p, array_pop($matches), $m);
-                        $detected_media[$i]['attachment_id'] = $m[1];
+                    $attachment_id = $this->findAttachmentId($p, $detected_media[$i]['attributes']);
+                    if ($attachment_id) {
+                        $detected_media[$i]['attachment_id'] = $attachment_id;
                     }
                     break;
             }
         }
 
         return $detected_media;
+    }
+
+    /**
+     * Gets the ID of an attachment post by searching inserted HTML.
+     *
+     * @param string $pattern Regular expression search with at least one capture group indicating the ID.
+     * @param string|string[] $search
+     *
+     * @return int|bool
+     */
+    private function findAttachmentId ($pattern, $search) {
+        if (!is_array($search)) {
+            $search = array($search);
+        }
+
+        if (!empty($pattern)) {
+            if ($matches = preg_grep($pattern, $search)) {
+                if (preg_match($pattern, array_pop($matches), $m)) {
+                    if (isset($m[1])) {
+                        return $m[1];
+                    }
+                }
+            }
+        } else {
+            foreach ($search as $k => $v) {
+                switch ($k) {
+                    case 'href':
+                    case 'src':
+                        if ($this->isLocalContent($v)) {
+                            $wp_upload_dir = wp_upload_dir();
+                            $path = str_replace(trailingslashit($wp_upload_dir['baseurl']), '', $v);
+                            $post = array_pop(get_posts(array(
+                                'post_type' => 'attachment',
+                                'post_status' => 'inherit',
+                                'meta_key' => '_wp_attached_file',
+                                'meta_value' => $path
+                            )));
+                            if (!empty($post)) {
+                                return $post->ID;
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether or not a given URL references content in the local uploads folder.
+     *
+     * @param string $url
+     *
+     * @return bool
+     */
+    private function isLocalContent ($url) {
+        $wp_upload_dir = wp_upload_dir();
+        if (!empty($wp_upload_dir['baseurl'])) {
+            $pos = strpos($url, trailingslashit($wp_upload_dir['baseurl']));
+            if (false !== $pos) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether or not the passed item is missing a remote post ID.
+     *
+     * @param int|array $item Either the ID of a post to check or a
+     *                        "media item" array, as returned by the
+     *                        {@see detectEmbeddedMedia `detectEmbeddedMedia()`}
+     *                        method.
+     *
+     * @return bool True if there is *not* a remote post ID, false if there is one.
+     */
+    private function missingRemotePostID ($item) {
+        $post_id = (is_array($item) && isset($item['attachment_id'])) ? $item['attachment_id'] : $item;
+        if (is_numeric($post_id) && get_post_meta($post_id, 'wordpress_post_id', true)) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -620,7 +737,11 @@ END_HTML;
             $opts = array(
                 'Files' => array('media[]' => array())
             );
-            return $this->wpcom->uploadToService($site, $params, $opts);
+            $resp = $this->wpcom->uploadToService($site, $params, $opts);
+            update_post_meta($attachment_id, 'wordpress_post_id', $resp->media[0]->ID);
+            update_post_meta($attachment_id, $this->prefix . '_destination', $site);
+            update_post_meta($attachment_id, $this->prefix . "_{$site}_fields", $resp->media[0]);
+            return $resp;
         }
     }
 
