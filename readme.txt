@@ -103,7 +103,7 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 
 == Changelog ==
 
-= Version 0.4.1 =
+= Version 0.4.2 =
 
 * [Bugfix](https://github.com/meitar/wp-crosspost/issues/5): Enable crossposting via XML-RPC or REST API.
 
