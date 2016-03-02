@@ -3,8 +3,8 @@ Contributors: meitar
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meitarm%40gmail%2ecom&lc=US&item_name=WP%20Crosspost%20WordPress%20Plugin&item_number=wp%2dcrosspost&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 Tags: WordPress.com, post, crosspost, publishing
 Requires at least: 3.1
-Tested up to: 4.4.1
-Stable tag: 0.4.1
+Tested up to: 4.4.2
+Stable tag: 0.4.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -102,6 +102,10 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 5. Get help where you need it from WordPress's built-in "Help" system.
 
 == Changelog ==
+
+= Version 0.4.1 =
+
+* [Bugfix](https://github.com/meitar/wp-crosspost/issues/5): Enable crossposting via XML-RPC or REST API.
 
 = Version 0.4.1 =
 

@@ -1,19 +1,48 @@
 <?php
 /**
- * Plugin Name: WordPress Crosspost
- * Plugin URI: https://github.com/meitar/wp-crosspost/#readme
- * Description: Automatically crossposts to your WordPress.com site when you publish a post on your (self-hosted) WordPress blog.
- * Version: 0.4.1
- * Author: Meitar Moscovitz
- * Author URI: https://maymay.net/
- * Text Domain: wp-crosspost
- * Domain Path: /languages
+ * WP Crosspost plugin for WordPress
+ *
+ * WordPress plugin header information:
+ *
+ * * Plugin Name: WordPress Crosspost
+ * * Plugin URI: https://github.com/meitar/wp-crosspost/#readme
+ * * Description: Automatically crossposts to your WordPress.com site when you publish a post on your (self-hosted) WordPress blog.
+ * * Version: 0.4.2
+ * * Author: Meitar Moscovitz
+ * * Author URI: https://maymay.net/
+ * * Text Domain: wp-crosspost
+ * * Domain Path: /languages
+ *
+ * @link https://developer.wordpress.org/plugins/the-basics/header-requirements/
+ *
+ * @license https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * @copyright Copyright (c) 2014-2016 by Meitar "maymay" Moscovitz
+ *
+ * @package WordPress\Plugin\WP_Crosspost
  */
 
+/**
+ * Main class.
+ */
 class WP_Crosspost {
-    private $wpcom; //< WordPress.com API manipulation wrapper.
-    private $prefix = 'wp_crosspost'; //< String to prefix plugin options, settings, etc.
+    /**
+     * WordPress.com API manipulation wrapper.
+     *
+     * @var WP_Crosspost_API_Client
+     */
+    private $wpcom;
 
+    /**
+     * String to prefix plugin options, settings, etc.
+     *
+     * @var string
+     */
+    private $prefix = 'wp_crosspost';
+
+    /**
+     * Constructor.
+     */
     public function __construct () {
         add_action('plugins_loaded', array($this, 'registerL10n'));
         add_action('init', array($this, 'updateChangedSettings'));
@@ -756,9 +785,6 @@ END_HTML;
      */
     public function savePost ($post_id) {
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) { return; }
-        if (!isset($_POST[$this->prefix . '_meta_box_nonce']) || !wp_verify_nonce($_POST[$this->prefix . '_meta_box_nonce'], 'editing_' . $this->prefix)) {
-            return;
-        }
         if (!$this->isConnectedToService()) { return; }
 
         if (isset($_POST[$this->prefix . '_use_excerpt'])) {
@@ -979,7 +1005,6 @@ END_HTML;
     }
 
     public function renderMetaBox ($post) {
-        wp_nonce_field('editing_' . $this->prefix, $this->prefix . '_meta_box_nonce');
         if (!$this->isConnectedToService()) {
             $this->showError(__('WordPress Crosspost does not yet have a connection to WordPress.com. Are you sure you connected WordPress Crosspost to your WordPress.com account?', 'wp-crosspost'));
             return;
