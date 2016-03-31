@@ -410,6 +410,8 @@ END_HTML;
             'password' => get_post_field('post_password', $post_id),
             // TODO: Figure out how to find approriate remote parent id.
             //'parent' => get_post_field('post_parent', $post_id),
+            // use public function getRemoteParentPageId (WPCrosspostAPIClient.php) to get post_parent
+            'parent' => ($this->wpcom->getRemoteParentPageId (get_post_meta($post_id, $this->prefix . '_destination', true), get_post_field('post_name', get_post_field('post_parent', $post_id))))->ID,
             'type' => get_post_type($post_id),
             'format' => get_post_format($post_id),
             'tags' => implode(',', $tags),
