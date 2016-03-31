@@ -25,6 +25,12 @@ class WP_Crosspost_API_Client extends WordPressDotCom_OAuthWP_Plugin {
         $data = $this->getUserInfo();
         return $this->talkToService('/sites/' . $data->token_site_id, array(), 'GET');
     }
+    
+    // Gets remote post by slug, used in public function prepareForWordPressDotCom (wp-crosspost.php) to find remote post_parent
+    public function getRemoteParentPageId ($site, $slug) {
+        $url = '/sites/' . $site . '/posts/slug:' . $slug;
+        return $this->talkToService($url, array(), 'GET');
+    }
 
     /**
      * Prepares a query string for a request.
