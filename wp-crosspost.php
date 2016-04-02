@@ -410,6 +410,8 @@ END_HTML;
             'password' => get_post_field('post_password', $post_id),
             // TODO: Figure out how to find approriate remote parent id.
             //'parent' => get_post_field('post_parent', $post_id),
+            // get remote parent from parent post metadata, only send parent if parent is already crossposted
+            'parent' => get_post_meta(get_post_field('post_parent', $post_id), 'wordpress_post_id', true),
             'type' => get_post_type($post_id),
             'format' => get_post_format($post_id),
             'tags' => implode(',', $tags),
