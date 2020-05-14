@@ -1,6 +1,6 @@
 === WordPress Crosspost ===
-Contributors: meitar
-Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meitarm%40gmail%2ecom&lc=US&item_name=WP%20Crosspost%20WordPress%20Plugin&item_number=wp%2dcrosspost&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
+Contributors: maymay
+Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=TJLPJYXHSRBEE&amp;lc=US&amp;item_name=WP%20Crosspost%20WordPress%20Plugin&amp;item_number=wp-crosspost&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 Tags: WordPress.com, post, crosspost, publishing
 Requires at least: 3.1
 Tested up to: 4.4.2
@@ -63,7 +63,7 @@ Moreover, WP-Crosspost makes use of [Manuel Lemos's `oauth_client_class`](http:/
         ├── LICENSE
         └── oauth_client.php
 
-It's also possible that your system administrator will apply updates to one or more of the core system packages this plugin uses without your knowledge. If this happens, and the updated packages contain backward-incompatible changes, the plugin may begin to issue errors. Should this occur, please [file a bug report on the WP-Crosspost project's issue tracker](https://github.com/meitar/wp-crosspost/issues/new).
+It's also possible that your system administrator will apply updates to one or more of the core system packages this plugin uses without your knowledge. If this happens, and the updated packages contain backward-incompatible changes, the plugin may begin to issue errors. Should this occur, please [file a bug report on the WP-Crosspost project's issue tracker](https://github.com/fabacab/wp-crosspost/issues/new).
 
 == Frequently Asked Questions ==
 
@@ -105,7 +105,7 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 
 = Version 0.4.2 =
 
-* [Bugfix](https://github.com/meitar/wp-crosspost/issues/5): Enable crossposting via XML-RPC or REST API.
+* [Bugfix](https://github.com/fabacab/wp-crosspost/issues/5): Enable crossposting via XML-RPC or REST API.
 
 = Version 0.4.1 =
 
@@ -114,7 +114,7 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 = Version 0.4 =
 
 * Feature: Cross-post featured images ([Post Thumbnails](https://codex.wordpress.org/Post_Thumbnails)). This works both for uploading and importing. Featured images you add to your local WordPress Media Library will be added to your site's Media Library on WordPress.com.
-* [Feature](https://github.com/meitar/wp-crosspost/issues/4): Automatically convert local audio embeds into remote audio embeds.
+* [Feature](https://github.com/fabacab/wp-crosspost/issues/4): Automatically convert local audio embeds into remote audio embeds.
 * Bugfix: Prevent duplicate importing of pages and custom post types during sync routines. (Regular posts were already de-duped.)
 * Bugfix: Prevent WP-Cron invocations from duplicating sync schedules.
 * Developer: New filter hook `wp_crosspost_prepared_post` lets other plugin authors customize the data about to be crossposted.
@@ -166,7 +166,7 @@ Not yet, but with your help it can be. To help translate the plugin into your la
 
 == Other notes ==
 
-Maintaining this plugin is a labor of love. However, if you like it, please consider [making a donation](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meitarm%40gmail%2ecom&lc=US&item_name=Tumblr%20Crosspostr%20WordPress%20Plugin&item_number=tumblr%2dcrosspostr&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) for your use of the plugin, [purchasing one of Meitar's web development books](http://www.amazon.com/gp/redirect.html?ie=UTF8&location=http%3A%2F%2Fwww.amazon.com%2Fs%3Fie%3DUTF8%26redirect%3Dtrue%26sort%3Drelevancerank%26search-type%3Dss%26index%3Dbooks%26ref%3Dntt%255Fathr%255Fdp%255Fsr%255F2%26field-author%3DMeitar%2520Moscovitz&tag=maymaydotnet-20&linkCode=ur2&camp=1789&creative=390957) or, better yet, contributing directly to [Meitar's Cyberbusking fund](http://Cyberbusking.org/). (Publishing royalties ain't exactly the lucrative income it used to be, y'know?) Your support is appreciated!
+Maintaining this plugin is a labor of love. However, if you like it, please consider [making a donation](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=TJLPJYXHSRBEE&amp;lc=US&amp;item_name=WP%20Crosspost%20WordPress%20Plugin&amp;item_number=wp-crosspost&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted) for your use of the plugin or, better yet, contributing directly to [my's Cyberbusking fund](http://Cyberbusking.org/). Your support is appreciated!
 
 This plugin is inspired by and based on [Tumblr Crosspostr](https://wordpress.org/plugins/tumblr-crosspostr/).
 
@@ -212,4 +212,4 @@ When sync'ing is enabled, you will import (pull):
     * featured images
     * media attachments, along with the actual media file itself
 
-Wondering if WP-Crosspost can do something you don't see on this list? Ask about or search for it in the [WP-Crosspost plugin support forum](https://wordpress.org/support/plugin/wp-crosspost)! Also, I'm just one guy working on this whenever I get the time to, so I prioritize the most often requested features. If your feature isn't high on my list, please be patient or, better yet, [donate to support my work on this plugin](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meitarm%40gmail%2ecom&lc=US&item_name=WP%20Crosspost%20WordPress%20Plugin&item_number=wp%2dcrosspost&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) so that I have more time to devote to this work. Thanks! :)
+Wondering if WP-Crosspost can do something you don't see on this list? Ask about or search for it in the [WP-Crosspost plugin support forum](https://wordpress.org/support/plugin/wp-crosspost)! Also, I'm just one guy working on this whenever I get the time to, so I prioritize the most often requested features. If your feature isn't high on my list, please be patient or, better yet, [donate to support my work on this plugin](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=TJLPJYXHSRBEE&amp;lc=US&amp;item_name=WP%20Crosspost%20WordPress%20Plugin&amp;item_number=wp-crosspost&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted) so that I have more time to devote to this work. Thanks! :)

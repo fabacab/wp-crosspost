@@ -5,19 +5,15 @@
  * WordPress plugin header information:
  *
  * * Plugin Name: WordPress Crosspost
- * * Plugin URI: https://github.com/meitar/wp-crosspost/#readme
+ * * Plugin URI: https://github.com/fabacab/wp-crosspost/#readme
  * * Description: Automatically crossposts to your WordPress.com site when you publish a post on your (self-hosted) WordPress blog.
  * * Version: 0.4.2
- * * Author: Meitar Moscovitz
- * * Author URI: https://maymay.net/
  * * Text Domain: wp-crosspost
  * * Domain Path: /languages
  *
  * @link https://developer.wordpress.org/plugins/the-basics/header-requirements/
  *
  * @license https://www.gnu.org/licenses/gpl-3.0.en.html
- *
- * @copyright Copyright (c) 2014-2016 by Meitar "maymay" Moscovitz
  *
  * @package WordPress\Plugin\WP_Crosspost
  */
@@ -164,7 +160,7 @@ class WP_Crosspost {
 <div class="donation-appeal">
     <p style="text-align: center; font-size: larger; width: 70%; margin: 0 auto;"><?php print sprintf(
 esc_html__('WordPress Crosspost is provided as free software, but sadly grocery stores do not offer free food. If you like this plugin, please consider %1$s to its %2$s. &hearts; Thank you!', 'wp-crosspost'),
-'<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=meitarm%40gmail%2ecom&lc=US&amp;item_name=WP%20Crosspost%20WordPress%20Plugin&amp;item_number=wp%2dcrosspost&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted" target="_blank">' . esc_html__('making a donation', 'wp-crosspost') . '</a>',
+'<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=TJLPJYXHSRBEE&amp;lc=US&amp;item_name=WP%20Crosspost%20WordPress%20Plugin&amp;item_number=wp-crosspost&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted" target="_blank">' . esc_html__('making a donation', 'wp-crosspost') . '</a>',
 '<a href="http://maymay.net/" target="_blank">' . esc_html__('houseless, jobless, nomadic developer', 'wp-crosspost') . '</a>'
 );?></p>
 </div>
@@ -277,7 +273,7 @@ esc_html__('WordPress Crosspost is provided as free software, but sadly grocery 
         $sidebar = <<<END_HTML
 <p><strong>$x</strong></p>
 <p><a href="https://wordpress.org/support/plugin/wp-crosspost" target="_blank">$y</a></p>
-<p><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=meitarm%40gmail%2ecom&lc=US&amp;item_name=WP%20Crosspost%20WordPress%20Plugin&amp;item_number=wp%2dcrosspost&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted" target="_blank">&hearts; $z &hearts;</a></p>
+<p><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=TJLPJYXHSRBEE&amp;lc=US&amp;item_name=WP%20Crosspost%20WordPress%20Plugin&amp;item_number=wp-crosspost&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted" target="_blank">&hearts; $z &hearts;</a></p>
 END_HTML;
         $screen->set_help_sidebar($screen->get_help_sidebar() . $sidebar);
     }
